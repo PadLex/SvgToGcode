@@ -1,0 +1,311 @@
+import math
+import warnings
+
+from typing import List
+
+from svg_to_gcode.geometry import Vector
+from svg_to_gcode.geometry import Line, EllipticalArc, CubicBazier, QuadraticBezier
+from svg_to_gcode import formulas
+from svg_to_gcode import TOLERANCES
+
+
+class Path:
+    """The Path class represents a generic svg path."""
+
+    command_lengths = {'M': 2, 'm': 2, 'L': 2, 'l': 2, 'H': 1, 'h': 1, 'V': 1, 'v': 1, 'Z': 0, 'z': 0, 'C': 6, 'c': 6,
+                       'Q': 4, 'q': 4, 'S': 4, 's': 4, 'T': 2, 't': 2, 'A': 7, 'a': 7}
+
+    __slots__ = "curves", "start", "end", "last_control", "canvas_height", "do_vertical_mirror", "do_vertical_translate"
+
+    def __init__(self, d: str, canvas_height: float, do_vertical_mirror=True, do_vertical_translate=True):
+        self.canvas_height = canvas_height
+        self.do_vertical_mirror = do_vertical_mirror
+        self.do_vertical_translate = do_vertical_translate
+
+        self.curves = []
+        self.start = None
+        self.end = Vector(0, 0)
+        self.last_control = None  # type: Vector
+
+        self._parse_commands(d)
+
+    def __repr__(self):
+        return f"Path({self.curves})"
+
+    def _parse_commands(self, d: str):
+        """Parse the value of the d key into """
+
+        command_key = ''  # A character representing a specific command based on the svg standard
+        command_arguments = []  # A list containing the arguments for the current command_key
+
+        number_str = ''  # A buffer used to store numeric characters before conferring them to a number
+
+        # Parse each character in d
+        i = 0
+        while i < len(d):
+            character = d[i]
+
+            numeric = character.isnumeric() or character == '.' or character == '-'
+
+            # If the current command is complete, however the next command does not specify a new key, assume the next
+            # command has the same key. This is implemented by inserting the current key before the next command and
+            # restarting the loop without incrementing i
+            if command_key and len(command_arguments) == self.command_lengths[command_key] and numeric:
+                d = d[:i] + command_key + d[i:]
+                continue
+
+            if numeric:
+                number_str += character
+
+            # If the character is a delimiter or a new letter, complete the number and save it as an argument
+            if character.isspace() or character == ',' or character.isalpha() or i == len(d) - 1:
+                if number_str:
+                    command_arguments.append(float(number_str))
+                    number_str = ''
+
+            # If it's a letter or the last character, parse the previous (now complete) command and save the letter as
+            # the new command key
+            if character.isalpha() or i == len(d) - 1:
+                if command_key:
+                    self._add_svg_curve(command_key, command_arguments)
+
+                command_key = character
+                command_arguments.clear()
+
+            i += 1
+
+    def _transform_coordinate_system(self, point: Vector):
+        """
+        If both do_vertical_mirror and do_vertical_translate are true, it will transform a point form a coordinate
+        system with the origin at the top-left, to one with origin at the bottom-right.
+        """
+
+        if self.do_vertical_mirror:
+            point = Vector(point.x, -point.y)
+
+        if self.do_vertical_translate:
+            point += Vector(0, self.canvas_height)
+
+        return point
+
+    def _add_svg_curve(self, command_key: str, command_arguments: List[float]):
+        """
+        Offer a representation of a curve using the geometry sub-module.
+        Based on Mozilla Docs: https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths
+
+        Each sub-method must be implemented with the following structure:
+        def descriptive_name(*command_arguments):
+            execute calculations, **do not modify or create any instance variables**
+            generate curve
+            modify instance variables
+            return curve
+
+        :param command_key: a character representing a specific command based on the svg standard
+        :param command_arguments: A list containing the arguments for the current command_key
+        """
+
+        # Only move end point
+        def absolute_move(x, y):
+            self.end = Vector(x, y)
+            return None
+
+        def relative_move(dx, dy):
+            return absolute_move(*(self.end + Vector(dx, dy)))
+
+        # Draw straight line
+        def absolute_line(x, y):
+            start = self.end
+            end = Vector(x, y)
+
+            line = Line(self._transform_coordinate_system(start), self._transform_coordinate_system(end))
+
+            self.end = end
+
+            return line
+
+        def relative_line(dx, dy):
+            return absolute_line(*(self.end + Vector(dx, dy)))
+
+        def absolute_horizontal_line(x):
+            return absolute_line(x, self.end.y)
+
+        def relative_horizontal_line(dx):
+            return absolute_horizontal_line(self.end.x + dx)
+
+        def absolute_vertical_line(y):
+            return absolute_line(self.end.x, y)
+
+        def relative_vertical_line(dy):
+            return absolute_vertical_line(self.end.y + dy)
+
+        def close_path():
+            return absolute_line(*self.start)
+
+        # Draw Curves
+        def absolute_cubic_bazier(control1_x, control1_y, control2_x, control2_y, x, y):
+
+            trans_start = self._transform_coordinate_system(self.end)
+            trans_end = self._transform_coordinate_system(Vector(x, y))
+            trans_control1 = self._transform_coordinate_system(Vector(control1_x, control1_y))
+            trans_control2 = self._transform_coordinate_system(Vector(control2_x, control2_y))
+
+            cubic_bezier = CubicBazier(trans_start, trans_end, trans_control1, trans_control2)
+
+            self.last_control = Vector(control2_x, control2_y)
+            self.end = Vector(x, y)
+
+            return cubic_bezier
+
+        def relative_cubic_bazier(dx1, dy1, dx2, dy2, dx, dy):
+            return absolute_cubic_bazier(self.end.x + dx1, self.end.y + dy1,
+                                         self.end.x + dx2, self.end.y + dy2,
+                                         self.end.x + dx, self.end.y + dy)
+
+        def absolute_cubic_bezier_extension(x2, y2, x, y):
+            start = self.end
+            control2 = Vector(x2, y2)
+            end = Vector(x, y)
+
+            if self.last_control:
+                control1 = 2 * start - self.last_control
+                bazier = absolute_cubic_bazier(*control1, *control2, *end)
+            else:
+                bazier = absolute_quadratic_bazier(*control2, *end)
+
+            self.end = start
+
+            return bazier
+
+        def relative_cubic_bazier_extension(dx2, dy2, dx, dy):
+            return absolute_cubic_bezier_extension(self.end.x + dx2, self.end.y + dy2,
+                                                   self.end.x + dx, self.end.y + dy)
+
+        def absolute_quadratic_bazier(control1_x, control1_y, x, y):
+
+            trans_end = self._transform_coordinate_system(self.end)
+            trans_new_end = self._transform_coordinate_system(Vector(x, y))
+            trans_control1 = self._transform_coordinate_system(Vector(control1_x, control1_y))
+
+            quadratic_bezier = QuadraticBezier(trans_end, trans_new_end, trans_control1)
+
+            self.last_control = Vector(control1_x, control1_y)
+            self.end = Vector(x, y)
+
+            return quadratic_bezier
+
+        def relative_quadratic_bazier(dx1, dy1, dx, dy):
+            return absolute_quadratic_bazier(self.end.x + dx1, self.end.y + dy1,
+                                             self.end.x + dx, self.end.y + dy)
+
+        def absolute_quadratic_bazier_extension(x, y):
+            start = self.end
+            end = Vector(x, y)
+
+            if self.last_control:
+                control = 2 * start - self.last_control
+                bazier = absolute_quadratic_bazier(*control, *end)
+            else:
+                bazier = absolute_quadratic_bazier(*start, *end)
+
+            self.end = end
+            return bazier
+
+        def relative_quadratic_bazier_extension(dx, dy):
+            return absolute_quadratic_bazier_extension(self.end.x + dx, self.end.y + dy)
+
+        # Generate EllipticalArc with center notation from svg endpoint notation.
+        # Based on w3.org implementation notes. https://www.w3.org/TR/SVG2/implnote.html
+        def absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, x, y):
+
+            start = self.end
+            end = Vector(x, y)
+            radii = Vector(rx, ry)
+
+            if abs(start - end) <= TOLERANCES['input']:
+                raise ValueError(f"Arc is a point. The start and the end points are too close: "
+                                 f"|{start} - {end}| <= {TOLERANCES['input']}")
+
+            if radii.x <= TOLERANCES['input'] or radii.y <= TOLERANCES['input']:
+                raise ValueError(f"Arc is a line. One of the radii is approximately 0: "
+                                 f"{radii.x} or {radii.y} <= {TOLERANCES['input']}")
+
+            # semi_minor_axis, semi_major_axis = sorted((radii.x, radii.y))
+            rotation_rad = math.radians(deg_from_horizontal)
+
+            # Find and select one of the two possible eclipse centers by undoing the rotation (to simplify the math) and
+            # then re-applying it.
+
+            rotated_half_differance = (start - end) / 2  # Find the half_differance of the start and the end points.
+            half_differance = formulas.rotate(rotated_half_differance, -rotation_rad,
+                                              True)  # Undo the ellipse's rotation.
+
+            rx, ry = radii.x, radii.y
+            mx, my = half_differance.x, half_differance.y
+
+            center = math.sqrt(((rx * ry) ** 2 - (rx * my) ** 2 - (ry * mx) ** 2) / ((rx * my) ** 2 + (ry * mx) ** 2)) *\
+                               Vector((rx * my) / ry, - (ry * mx) / rx)  # Find center using w3.org's formula
+
+            center *= -1 if large_arc_flag == sweep_flag else 1  # Select one of the two solutions based on flags
+
+            rotated_center = formulas.rotate(center, rotation_rad, False) + (start + end) / 2  # re-apply the rotation
+
+            cx, cy = center.x, center.y
+            u = Vector((mx - cx) / rx, (my - cy) / ry)
+            v = Vector((-mx - cx) / rx, (-my - cy) / ry)
+
+            start_angle = formulas.angle_between_vectors(Vector(1, 0), u)
+            sweep_angle = formulas.angle_between_vectors(u, v)
+
+            arc = EllipticalArc(self._transform_coordinate_system(rotated_center), Vector(radii.x, -radii.y),
+                                rotation_rad, start_angle, sweep_angle)
+
+            self.end = Vector(x, y)
+
+            return arc
+
+        def relative_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, dx, dy):
+            return absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, dx, dy)
+
+        command_methods = {
+            # Only move end point
+            'M': absolute_move,
+            'm': relative_move,
+
+            # Draw straight line
+            'L': absolute_line,
+            'l': relative_line,
+            'H': absolute_horizontal_line,
+            'h': relative_horizontal_line,
+            'V': absolute_vertical_line,
+            'v': relative_vertical_line,
+            'Z': close_path,
+            'z': close_path,
+
+            # Draw bazier curves
+            'C': absolute_cubic_bazier,
+            'c': relative_cubic_bazier,
+            'S': absolute_cubic_bezier_extension,
+            's': relative_cubic_bazier_extension,
+            'Q': absolute_quadratic_bazier,
+            'q': relative_quadratic_bazier,
+            'T': absolute_quadratic_bazier_extension,
+            't': relative_quadratic_bazier_extension,
+
+            # Draw elliptical arcs
+            'A': absolute_arc,
+            'a': relative_arc
+        }
+
+        try:
+            curve = command_methods[command_key](*command_arguments)
+        except ValueError as e:
+            warnings.warn(f"Skipping curve {command_key, command_arguments} because it caused the following value "
+                          f"error:\n{e}")
+
+            return
+
+        if curve is not None:
+            self.curves.append(curve)
+
+        if self.start is None:
+            self.start = self.end

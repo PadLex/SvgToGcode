@@ -1,0 +1,23 @@
+<ns0:svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.inkscape.org/namespaces/inkscape" xmlns:ns2="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:ns4="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" height="210mm" id="svg24" version="1.1" viewBox="0 0 210 210" width="210mm" ns2:docname="drawing.svg" ns1:version="1.0 (4035a4fb49, 2020-05-01)">
+  <ns0:defs id="defs18" />
+  <ns2:namedview bordercolor="#000000" borderlayer="true" borderopacity="1" id="base" pagecolor="#ffffff" showborder="true" showgrid="true" ns1:current-layer="layer1" ns1:cx="519.26503" ns1:cy="458.58288" ns1:document-rotation="0" ns1:document-units="mm" ns1:pagecheckerboard="false" ns1:pageopacity="0.0" ns1:pageshadow="2" ns1:showpageshadow="false" ns1:window-height="1017" ns1:window-maximized="1" ns1:window-width="1920" ns1:window-x="-8" ns1:window-y="-8" ns1:zoom="0.98994949">
+    <ns1:grid color="#7f3fff" dotted="false" empcolor="#3f3fff" empopacity="1" empspacing="10" enabled="true" id="grid26" opacity="0.37647059" originx="0" originy="0" spacingx="1" spacingy="1" type="xygrid" units="mm" visible="false" />
+  </ns2:namedview>
+  <ns0:metadata id="metadata21">
+    <rdf:RDF>
+      <ns4:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </ns4:Work>
+    </rdf:RDF>
+  </ns0:metadata>
+  <ns0:g id="layer1" ns1:groupmode="layer" ns1:label="Layer 1">
+
+    <ns0:path d="M0 0 L 100 100 H 150 V 150 Z L 150 100" fill="none" stroke="black" stroke-width="0.01mm" style="" />
+
+    <ns0:path d="M 0 100 m 0 0 l 100 100 h 50 v -50 z l 150 100" fill="none" stroke="black" stroke-width="0.01mm" style="" />
+
+
+  </ns0:g>
+<ns0:g><ns0:path d="M0.0 0.0 L 100.0 100.0" fill="none" stroke="red" stroke-width="0.005mm" /><ns0:path d="M100.0 100.0 L 150.0 100.0" fill="none" stroke="red" stroke-width="0.005mm" /><ns0:path d="M150.0 100.0 L 150.0 150.0" fill="none" stroke="red" stroke-width="0.005mm" /><ns0:path d="M150.0 150.0 L 0.0 0.0" fill="none" stroke="red" stroke-width="0.005mm" /><ns0:path d="M0.0 0.0 L 150.0 100.0" fill="none" stroke="red" stroke-width="0.005mm" /><ns0:path d="M0.0 100.0 L 100.0 200.0" fill="none" stroke="red" stroke-width="0.005mm" /><ns0:path d="M100.0 200.0 L 150.0 200.0" fill="none" stroke="red" stroke-width="0.005mm" /><ns0:path d="M150.0 200.0 L 150.0 150.0" fill="none" stroke="red" stroke-width="0.005mm" /><ns0:path d="M150.0 150.0 L 0.0 100.0" fill="none" stroke="red" stroke-width="0.005mm" /><ns0:path d="M0.0 100.0 L 150.0 200.0" fill="none" stroke="red" stroke-width="0.005mm" /></ns0:g></ns0:svg>
