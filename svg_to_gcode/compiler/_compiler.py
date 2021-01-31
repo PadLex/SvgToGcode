@@ -45,6 +45,9 @@ class Compiler:
         :return returns the assembled code. self.header + [self.body, -self.pass_depth] * passes + self.footer
         """
 
+        if len(self.body) == 0:
+            warnings.warn("Compile with an empty body (no curves). Is this intentional?")
+
         gcode = []
 
         gcode.extend(self.header)
@@ -87,10 +90,10 @@ class Compiler:
 
         start = line_chain.get(0).start
 
+        # Don't turn off laser if the new start is at the current position
         if self.interface.position is None or abs(self.interface.position - start) > TOLERANCES["operation"]:
-            # ToDo don't turn off laser if the new start is at the current position
             code = [self.interface.laser_off(), self.interface.linear_move(start.x, start.y),
-                     self.interface.set_laser_power(1)]
+                    self.interface.set_laser_power(1)]
 
         for line in line_chain:
             code.append(self.interface.linear_move(line.end.x, line.end.y))

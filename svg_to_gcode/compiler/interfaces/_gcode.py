@@ -38,13 +38,14 @@ class Gcode(Interface):
         command += f" Y {y}" if y else ''
         command += f" Z {z}" if z else ''
 
-        if x is None:
-            x = self.position.x
+        if self.position is not None or (x is not None and y is not None):
+            if x is None:
+                x = self.position.x
 
-        if y is None:
-            y = self.position.y
+            if y is None:
+                y = self.position.y
 
-        self.position = Vector(x, y)
+            self.position = Vector(x, y)
 
         return command + ';'
 
