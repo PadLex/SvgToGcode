@@ -1,19 +1,42 @@
-# Do you want to run a test on a specific example? If so, this is the script for you.
-# Modify as you please, just remember not to commit your changes.
+"""
+Do you want to run a test on a specific example? If so, this is the script for you.
+Modify as you please, just remember not to commit your changes.
+"""
 
-from testing.other_tests.linear_approximation.test import run_test
+import os
+import importlib
+
+from testing.comparison_tests import compare_files
 
 
 if __name__ == "__main__":
-    svg_file_name = f"examples\\cubic_bazier.svg"
-    test_type = ["comparison", "other"][1]
+    example = "ellipse"
+    test_name = "basic_usage"
+    test_type = ["comparison", "other"][0]
 
     if test_type == "comparison":
-        with open(svg_file_name, 'rb') as svg_file:
+        run_test = importlib.import_module(f"testing.comparison_tests.{test_name}.test").run_test
+
+        input_path = f"examples\\{example}.svg"
+        correct_path = f"comparison_tests\\{test_name}\\{example}.gcode"
+        output_path = f"comparison_tests\\{test_name}\\{example}-unverified.gcode"
+
+        with open(input_path, 'rb') as svg_file:
             svg_string = svg_file.read()
 
-        print(run_test(svg_string))
+        with open(output_path, 'w') as gcode_file:
+            gcode_file.write(run_test(svg_string))
+
+        print(f"Saved output to {output_path}")
+
+        if os.path.isfile(correct_path):
+            if compare_files(correct_path, output_path):
+                print("Success, outputs are within operational tolerance")
+            else:
+                print("Ups, the outputs are different")
 
     if test_type == "other":
-        debug_file_name = f"other_tests\\linear_approximation\\cubic_bazier.svg"
-        print(run_test(svg_file_name, debug_file_name))
+        run_test = importlib.import_module(f"testing.other_tests.{test_name}.test").run_test
+
+        debug_file_name = f"other_tests\\linear_approximation\\{example}.svg"
+        print(run_test(example, debug_file_name))
