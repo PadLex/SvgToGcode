@@ -4,7 +4,7 @@ from svg_to_gcode.svg_parser import parse_file
 from svg_to_gcode.geometry import LineSegmentChain
 
 from svg_to_gcode import TOLERANCES
-TOLERANCES["approximation"] = 10**-2
+#TOLERANCES["approximation"] = 10**-2
 
 name_space = 'http://www.w3.org/2000/svg'
 
