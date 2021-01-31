@@ -25,4 +25,5 @@ class QuadraticBezier(Curve):
         return 2 * (1 - t) * (self.control - self.start) + 2 * t * (self.end - self.control)
 
     def sanity_check(self):
+        # ToDo verify if self.start == self.end forms a valid curve under the svg standard
         pass

@@ -27,13 +27,16 @@ class Path:
         self.end = Vector(0, 0)
         self.last_control = None  # type: Vector
 
-        self._parse_commands(d)
+        try:
+            self._parse_commands(d)
+        except Exception as generic_exception:
+            warnings.warn(f"Terminating path. The following unforeseen exception occurred: {generic_exception}")
 
     def __repr__(self):
         return f"Path({self.curves})"
 
     def _parse_commands(self, d: str):
-        """Parse the value of the d key into """
+        """Parse svg commands (stored in value of the d key) into geometric curves."""
 
         command_key = ''  # A character representing a specific command based on the svg standard
         command_arguments = []  # A list containing the arguments for the current command_key
@@ -45,27 +48,34 @@ class Path:
         while i < len(d):
             character = d[i]
 
-            numeric = character.isnumeric() or character == '.' or character == '-'
+            is_numeric = character.isnumeric() or character in ['-', '.', 'e']  # Yes, "-6.2e-4" is a valid float.
+            is_delimiter = character.isspace() or character in [',']
+            is_command_key = character in self.command_lengths.keys()
+            is_final = i == len(d) - 1
 
             # If the current command is complete, however the next command does not specify a new key, assume the next
             # command has the same key. This is implemented by inserting the current key before the next command and
             # restarting the loop without incrementing i
-            if command_key and len(command_arguments) == self.command_lengths[command_key] and numeric:
-                d = d[:i] + command_key + d[i:]
-                continue
+            try:
+                if command_key and len(command_arguments) == self.command_lengths[command_key] and is_numeric:
+                    d = d[:i] + command_key + d[i:]
+                    continue
+            except KeyError as key_error:
+                warnings.warn(f"Unknown command key {command_key}. Skipping curve.")
 
-            if numeric:
+            if is_numeric:
                 number_str += character
 
-            # If the character is a delimiter or a new letter, complete the number and save it as an argument
-            if character.isspace() or character == ',' or character.isalpha() or i == len(d) - 1:
+            # If the character is a delimiter or a command key or the last character, complete the number and save it
+            # as an argument
+            if is_delimiter or is_command_key or is_final:
                 if number_str:
                     command_arguments.append(float(number_str))
                     number_str = ''
 
             # If it's a letter or the last character, parse the previous (now complete) command and save the letter as
             # the new command key
-            if character.isalpha() or i == len(d) - 1:
+            if is_command_key or is_final:
                 if command_key:
                     self._add_svg_curve(command_key, command_arguments)
 
@@ -298,14 +308,15 @@ class Path:
 
         try:
             curve = command_methods[command_key](*command_arguments)
-        except ValueError as e:
-            warnings.warn(f"Skipping curve {command_key, command_arguments} because it caused the following value "
-                          f"error:\n{e}")
-
-            return
-
-        if curve is not None:
-            self.curves.append(curve)
+        except TypeError as type_error:
+            warnings.warn(f"Mis-formed input. Skipping command {command_key, command_arguments} because it caused the "
+                          f"following error: \n{type_error}")
+        except ValueError as value_error:
+            warnings.warn(f"Impossible geometry. Skipping curve {command_key, command_arguments} because it caused the "
+                          f"following value error:\n{value_error}")
+        else:
+            if curve is not None:
+                self.curves.append(curve)
 
         if self.start is None:
             self.start = self.end
