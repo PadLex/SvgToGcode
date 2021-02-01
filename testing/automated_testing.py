@@ -32,7 +32,6 @@ if __name__ == "__main__":
             print(f"{test_name} passed {comparisons} out of {len(svg_names)} examples.")
 
         if len(missing_results):
-            print(f"{test_name} is missing the following verified test results:")
             print(f"The following examples are missing a verified result for the {test_name} test: {missing_results}")
             print(f"After verifying that the example-unverified.gcode is correct, rename it to example.gcode.\n")
 

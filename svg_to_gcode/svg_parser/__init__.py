@@ -7,4 +7,4 @@ specific maintenance notes:
 """
 
 from svg_to_gcode.svg_parser._path import Path
-from svg_to_gcode.svg_parser._helper_functions import parse_file, parse_string
+from svg_to_gcode.svg_parser._helper_functions import parse_file, parse_string, parse_root

@@ -13,7 +13,9 @@
     </rdf:RDF>
   </ns0:metadata>
   <ns0:g id="layer1" ns2:groupmode="layer" ns2:label="Layer 1">
+
     <ns0:path style="" d="m 60,90 c 0,0 0,-30.000001 40,-10.000001 40,20.000001 0,-20 20,-20 20,0 20,0 20,0" id="path1400" fill="none" stroke="black" stroke-width="0.1mm" />
+
     <ns0:path ns1:nodetypes="ccc" style="" d="M 50,50 C 0,0 0,80 40,0 50,30 30,0 30,0" id="path1401" fill="none" stroke="black" stroke-width="0.1mm" />
     <ns0:path style="" d="m 50,150 c 0,0 50,20 10,-10 -40,-30 -10,10 0,0" id="path8" fill="none" stroke="black" stroke-width="0.1mm" />
     <ns0:path style="" d="m 100,150 c 10,20 50,20 10,-10 s 0 -10 0 0, -10 30 10 30" id="path8" fill="none" stroke="black" stroke-width="0.1mm" />

@@ -23,7 +23,7 @@ class Path:
         self.do_vertical_translate = do_vertical_translate
 
         self.curves = []
-        self.start = None
+        self.start = None  # type: Vector
         self.end = Vector(0, 0)
         self.last_control = None  # type: Vector
 

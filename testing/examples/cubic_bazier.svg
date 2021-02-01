@@ -71,11 +71,14 @@
   <g
      id="layer1"
      inkscape:groupmode="layer"
-     inkscape:label="Layer 1">
+     inkscape:label="Layer 1"
+  >
+
     <path
-       style="fill:none;stroke:#ff0000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 60,90 c 0,0 0,-30.000001 40,-10.000001 40,20.000001 0,-20 20,-20 20,0 20,0 20,0"
-       id="path1400" />
+     style="fill:none;stroke:#ff0000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     d="m 60,90 c 0,0 0,-30.000001 40,-10.000001 40,20.000001 0,-20 20,-20 20,0 20,0 20,0"
+     id="path1400" />
+
     <path
        sodipodi:nodetypes="ccc"
        style="fill:none;stroke:#0000ff;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
