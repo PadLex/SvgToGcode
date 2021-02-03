@@ -27,7 +27,7 @@ class Gcode(Interface):
             warnings.warn("liner_move command invoked without arguments.")
             return ''
 
-        command = "G1"
+        command = "G0"
 
         if self._current_speed != self._next_speed:
             self._current_speed = self._next_speed
