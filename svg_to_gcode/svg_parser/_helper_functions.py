@@ -31,11 +31,7 @@ def parse_root(root: ElementTree.Element, canvas_height=None, transform=True, dr
 
     if canvas_height is None:
         height_str = root.get("height")
-
-        if height_str.isnumeric():
-            canvas_height = float(height_str)
-        else:
-            canvas_height = float(height_str[:-2])
+        canvas_height = float(height_str) if height_str.isnumeric() else float(height_str[:-2])
 
     curves = []
 

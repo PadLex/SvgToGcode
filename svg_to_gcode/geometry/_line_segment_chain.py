@@ -1,5 +1,5 @@
 from svg_to_gcode.geometry import Chain
-from svg_to_gcode.geometry import Curve, Line
+from svg_to_gcode.geometry import Curve, Line, Vector
 from svg_to_gcode import TOLERANCES
 
 
@@ -29,13 +29,20 @@ class LineSegmentChain(Chain):
 
         self._curves.append(line2)
 
-    # A handy debugging function
-    def to_svg_path(self, wrapped=True):
+    def to_svg_path(self, wrapped=True, transform=False, height=None):
+        """A handy debugging function which the current line-chain in svg form"""
 
-        d = f"M{self._curves[0].start.x} {self._curves[0].start.y}"
+        if transform:
+            assert height
+            start_ = Vector(self._curves[0].start.x, height-self._curves[0].start.y)
+        else:
+            start_ = Vector(self._curves[0].start.x, self._curves[0].start.y)
+
+        d = f"M{start_.x} {start_.y}"
 
         for line in self._curves:
-            d += f" L {line.end.x} {line.end.y}"
+            end_ = Vector(line.end.x, height-line.end.y) if transform else Vector(line.end.x, line.end.y)
+            d += f" L {end_.x} {end_.y}"
 
         if not wrapped:
             return d

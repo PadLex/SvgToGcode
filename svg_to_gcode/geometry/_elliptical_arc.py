@@ -5,6 +5,8 @@ from svg_to_gcode.geometry import Vector
 from svg_to_gcode.geometry import Curve
 
 
+# Todo investigate odd behaviour when transform is false. Parsing it without transforming and then tracing to svg
+#  without transforming translates the drawing up a little.
 class EllipticalArc(Curve):
     """The EllipticalArc class inherits from the abstract Curve class and describes an elliptical arc."""
 

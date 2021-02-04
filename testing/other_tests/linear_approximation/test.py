@@ -10,7 +10,7 @@ name_space = 'http://www.w3.org/2000/svg'
 
 
 def run_test(svg_file_name, debug_file_name):
-    curves = parse_file(svg_file_name, transform=False)
+    curves = parse_file(svg_file_name)
 
     success = True
     approximations = []
@@ -31,6 +31,9 @@ def generate_debug(approximations, svg_file_name, debug_file_name):
 
     root = tree.getroot()
 
+    height_str = root.get("height")
+    canvas_height = float(height_str) if height_str.isnumeric() else float(height_str[:-2])
+
     for path in root.iter("{%s}path" % name_space):
         path.set("fill", "none")
         path.set("stroke", "black")
@@ -41,7 +44,7 @@ def generate_debug(approximations, svg_file_name, debug_file_name):
 
     for approximation in approximations:
         path = Element("{%s}path" % name_space)
-        path.set("d", approximation.to_svg_path(wrapped=False))
+        path.set("d", approximation.to_svg_path(wrapped=False, transform=True, height=canvas_height))
         path.set("fill", "none")
         path.set("stroke", "red")
         path.set("stroke-width", f"{TOLERANCES['approximation']/2}mm")
