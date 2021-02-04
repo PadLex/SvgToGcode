@@ -4,6 +4,8 @@ from svg_to_gcode import formulas
 from svg_to_gcode.compiler.interfaces import Interface
 from svg_to_gcode.geometry import Vector
 
+verbose = False
+
 
 class Gcode(Interface):
 
@@ -27,16 +29,17 @@ class Gcode(Interface):
             warnings.warn("liner_move command invoked without arguments.")
             return ''
 
-        command = "G0"
+        # Todo, investigate G0 command and replace movement speeds with G1 (normal speed) and G0 (fast move)
+        command = "G1"
 
         if self._current_speed != self._next_speed:
             self._current_speed = self._next_speed
             command += f" F {self._current_speed}"
 
         # Move if not 0 and not None
-        command += f" X {x}" if x else ''
-        command += f" Y {y}" if y else ''
-        command += f" Z {z}" if z else ''
+        command += f" X {x}" if x is not None else ''
+        command += f" Y {y}" if y is not None else ''
+        command += f" Z {z}" if z is not None else ''
 
         if self.position is not None or (x is not None and y is not None):
             if x is None:
@@ -46,6 +49,9 @@ class Gcode(Interface):
                 y = self.position.y
 
             self.position = Vector(x, y)
+
+        if verbose:
+            print(f"Move to {x}, {y}, {z}")
 
         return command + ';'
 

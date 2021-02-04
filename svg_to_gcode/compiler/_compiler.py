@@ -109,11 +109,8 @@ class Compiler:
         for curve in curves:
             line_chain = LineSegmentChain()
 
-            if isinstance(curve, Line):
-                line_chain.append(curve)
-            else:
-                approximation = LineSegmentChain.line_segment_approximation(curve)
+            approximation = LineSegmentChain.line_segment_approximation(curve)
 
-                line_chain.extend(approximation)
+            line_chain.extend(approximation)
 
             self.append_line_chain(line_chain)

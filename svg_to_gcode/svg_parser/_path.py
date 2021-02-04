@@ -8,6 +8,8 @@ from svg_to_gcode.geometry import Line, EllipticalArc, CubicBazier, QuadraticBez
 from svg_to_gcode import formulas
 from svg_to_gcode import TOLERANCES
 
+verbose = False
+
 
 class Path:
     """The Path class represents a generic svg path."""
@@ -63,6 +65,7 @@ class Path:
             except KeyError as key_error:
                 warnings.warn(f"Unknown command key {command_key}. Skipping curve.")
 
+            # If the character is part of a number, keep on composing it
             if is_numeric:
                 number_str += character
 
@@ -73,14 +76,18 @@ class Path:
                     command_arguments.append(float(number_str))
                     number_str = ''
 
-            # If it's a letter or the last character, parse the previous (now complete) command and save the letter as
-            # the new command key
+            # If it's a command key or the last character, parse the previous (now complete) command and save the letter
+            # as the new command key
             if is_command_key or is_final:
                 if command_key:
                     self._add_svg_curve(command_key, command_arguments)
 
                 command_key = character
                 command_arguments.clear()
+
+            # If the last character is a command key (only useful for Z), save
+            if is_command_key and is_final:
+                self._add_svg_curve(command_key, command_arguments)
 
             i += 1
 
@@ -319,4 +326,7 @@ class Path:
                 self.curves.append(curve)
 
         if self.start is None:
-            self.start = self.end
+            self.start = Vector(*self.end)
+
+        if verbose:
+            print(f"{command_key}{tuple(command_arguments)} -> {curve}")
