@@ -16,8 +16,9 @@
 
     <ns0:path d="M0 0 L 100 100 H 150 V 150 Z L 150 100" style="" fill="none" stroke="black" stroke-width="0.1mm" />
 
-    <ns0:path d="M 0 100 m 0 0 l 100 100 h 50 v -50 z l 150 100" style="" fill="none" stroke="black" stroke-width="0.1mm" />
-
+    <ns0:g ns1:label="Layer 1" ns1:groupmode="layer" id="layer1" style="display:inline">
+    <ns0:path d="m 0,100 m 0,0 100,100 h 50 v -50 z m 0,0 150,100" style="" id="path6" fill="none" stroke="black" stroke-width="0.1mm" />
+  </ns0:g>
 
   </ns0:g>
 <ns0:g><ns0:path d="M0.0 0.0 L 100.0 100.0" fill="none" stroke="red" stroke-width="0.05mm" /><ns0:path d="M100.0 100.0 L 150.0 100.0" fill="none" stroke="red" stroke-width="0.05mm" /><ns0:path d="M150.0 100.0 L 150.0 150.0" fill="none" stroke="red" stroke-width="0.05mm" /><ns0:path d="M150.0 150.0 L 0.0 0.0" fill="none" stroke="red" stroke-width="0.05mm" /><ns0:path d="M0.0 0.0 L 150.0 100.0" fill="none" stroke="red" stroke-width="0.05mm" /><ns0:path d="M0.0 100.0 L 100.0 200.0" fill="none" stroke="red" stroke-width="0.05mm" /><ns0:path d="M100.0 200.0 L 150.0 200.0" fill="none" stroke="red" stroke-width="0.05mm" /><ns0:path d="M150.0 200.0 L 150.0 150.0" fill="none" stroke="red" stroke-width="0.05mm" /><ns0:path d="M150.0 150.0 L 0.0 100.0" fill="none" stroke="red" stroke-width="0.05mm" /><ns0:path d="M0.0 100.0 L 150.0 200.0" fill="none" stroke="red" stroke-width="0.05mm" /></ns0:g></ns0:svg>

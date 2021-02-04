@@ -17,7 +17,8 @@ class Path:
     command_lengths = {'M': 2, 'm': 2, 'L': 2, 'l': 2, 'H': 1, 'h': 1, 'V': 1, 'v': 1, 'Z': 0, 'z': 0, 'C': 6, 'c': 6,
                        'Q': 4, 'q': 4, 'S': 4, 's': 4, 'T': 2, 't': 2, 'A': 7, 'a': 7}
 
-    __slots__ = "curves", "start", "end", "last_control", "canvas_height", "do_vertical_mirror", "do_vertical_translate"
+    __slots__ = "curves", "start", "end", "last_control", "canvas_height", "do_vertical_mirror", \
+                "do_vertical_translate", "draw_move"
 
     def __init__(self, d: str, canvas_height: float, do_vertical_mirror=True, do_vertical_translate=True):
         self.canvas_height = canvas_height
@@ -60,7 +61,16 @@ class Path:
             # restarting the loop without incrementing i
             try:
                 if command_key and len(command_arguments) == self.command_lengths[command_key] and is_numeric:
-                    d = d[:i] + command_key + d[i:]
+                    duplicate = command_key
+                    # If a moveto is followed by multiple pairs of coordinates, the subsequent pairs are treated as
+                    # implicit lineto commands. https://www.w3.org/TR/SVG2/paths.html#PathDataMovetoCommands
+                    if command_key == 'm':
+                        duplicate = 'l'
+
+                    if command_key == 'M':
+                        duplicate = 'L'
+
+                    d = d[:i] + duplicate + d[i:]
                     continue
             except KeyError as key_error:
                 warnings.warn(f"Unknown command key {command_key}. Skipping curve.")

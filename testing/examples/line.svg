@@ -77,10 +77,9 @@
       d="M0 0 L 100 100 H 150 V 150 Z L 150 100"
       style="fill:none;stroke:blue;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
 
-    <path
-      d="M 0 100 m 0 0 l 100 100 h 50 v -50 z l 150 100"
-      style="fill:none;stroke:red;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
-
+    <g inkscape:label="Layer 1" inkscape:groupmode="layer" id="layer1" style="display:inline">
+    <path d="m 0,100 m 0,0 100,100 h 50 v -50 z m 0,0 150,100" style="display:inline;fill:none;stroke:#ff0000;stroke-width:1.26458px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" id="path6"/>
+  </g>
 
   </g>
 </svg>
