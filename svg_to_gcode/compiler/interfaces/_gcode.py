@@ -79,10 +79,10 @@ class Gcode(Interface):
         return "G92 X0 Y0 Z0;"
 
     def set_unit(self, unit):
-        if unit == "millimeters":
+        if unit == "mm":
             return "G21;"
 
-        if unit == "inches":
+        if unit == "in":
             return "G20;"
 
         return ''

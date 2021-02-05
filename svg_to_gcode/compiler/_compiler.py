@@ -25,12 +25,13 @@ class Compiler:
             raise ValueError(f"Unknown unit {unit}. Please specify one of the following: {UNITS}")
 
         if custom_header is None:
-            custom_header = [self.interface.laser_off(), self.interface.set_movement_speed(self.movement_speed)]
+            custom_header = [self.interface.laser_off()]
 
         if custom_footer is None:
             custom_footer = [self.interface.laser_off()]
 
-        self.header = [self.interface.set_absolute_coordinates()] + custom_header
+        self.header = [self.interface.set_absolute_coordinates(),
+                       self.interface.set_movement_speed(self.movement_speed)] + custom_header
         self.footer = custom_footer
         self.body = []
 

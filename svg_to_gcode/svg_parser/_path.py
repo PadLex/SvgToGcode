@@ -30,8 +30,10 @@ class Path:
         self.end = Vector(0, 0)
         self.last_control = None  # type: Vector
 
+        self._parse_commands(d)
         try:
-            self._parse_commands(d)
+            pass
+            #self._parse_commands(d)
         except Exception as generic_exception:
             warnings.warn(f"Terminating path. The following unforeseen exception occurred: {generic_exception}")
 
@@ -246,44 +248,49 @@ class Path:
 
             start = self.end
             end = Vector(x, y)
-            radii = Vector(rx, ry)
 
-            if abs(start - end) <= TOLERANCES['input']:
-                raise ValueError(f"Arc is a point. The start and the end points are too close: "
-                                 f"|{start} - {end}| <= {TOLERANCES['input']}")
-
-            if radii.x <= TOLERANCES['input'] or radii.y <= TOLERANCES['input']:
-                raise ValueError(f"Arc is a line. One of the radii is approximately 0: "
-                                 f"{radii.x} or {radii.y} <= {TOLERANCES['input']}")
-
-            # semi_minor_axis, semi_major_axis = sorted((radii.x, radii.y))
             rotation_rad = math.radians(deg_from_horizontal)
 
             # Find and select one of the two possible eclipse centers by undoing the rotation (to simplify the math) and
             # then re-applying it.
+            rotated_primed_values = (start - end) / 2  # Find the primed_values of the start and the end points.
+            primed_values = formulas.rotate(rotated_primed_values, -rotation_rad, True)  # Undo the ellipse's rotation.
+            px, py = primed_values.x, primed_values.y
 
-            rotated_half_differance = (start - end) / 2  # Find the half_differance of the start and the end points.
-            half_differance = formulas.rotate(rotated_half_differance, -rotation_rad,
-                                              True)  # Undo the ellipse's rotation.
+            # Correct out-of-range radii
+            # ToDo investigate buggy behaviour
+            rx = abs(rx)
+            ry = abs(ry)
+            if rx <= TOLERANCES['operation'] or ry <= TOLERANCES['operation']:
+                return absolute_line(x, y)
 
-            rx, ry = radii.x, radii.y
-            mx, my = half_differance.x, half_differance.y
+            delta = px**2/rx**2 + py**2/ry**2
+            print(delta, rx, ry)
 
-            center = math.sqrt(((rx * ry) ** 2 - (rx * my) ** 2 - (ry * mx) ** 2) / ((rx * my) ** 2 + (ry * mx) ** 2)) *\
-                               Vector((rx * my) / ry, - (ry * mx) / rx)  # Find center using w3.org's formula
+            if delta > 1:
+                rx *= math.sqrt(delta)
+                ry *= math.sqrt(delta)
 
-            center *= -1 if large_arc_flag == sweep_flag else 1  # Select one of the two solutions based on flags
+            if math.sqrt(delta) > 1:
+                center = Vector(0, 0)
+            else:
+                radicant = ((rx * ry) ** 2 - (rx * py) ** 2 - (ry * px) ** 2) / ((rx * py) ** 2 + (ry * px) ** 2)
+
+                # Find center using w3.org's formula
+                center = math.sqrt(radicant) * Vector((rx * py) / ry, - (ry * px) / rx)
+
+                center *= -1 if large_arc_flag == sweep_flag else 1  # Select one of the two solutions based on flags
 
             rotated_center = formulas.rotate(center, rotation_rad, False) + (start + end) / 2  # re-apply the rotation
 
             cx, cy = center.x, center.y
-            u = Vector((mx - cx) / rx, (my - cy) / ry)
-            v = Vector((-mx - cx) / rx, (-my - cy) / ry)
+            u = Vector((px - cx) / rx, (py - cy) / ry)
+            v = Vector((-px - cx) / rx, (-py - cy) / ry)
 
             start_angle = formulas.angle_between_vectors(Vector(1, 0), u)
             sweep_angle = formulas.angle_between_vectors(u, v)
 
-            arc = EllipticalArc(self._transform_coordinate_system(rotated_center), Vector(radii.x, -radii.y),
+            arc = EllipticalArc(self._transform_coordinate_system(rotated_center), Vector(rx, -ry),
                                 rotation_rad, start_angle, sweep_angle)
 
             self.end = Vector(x, y)
@@ -322,9 +329,10 @@ class Path:
             'A': absolute_arc,
             'a': relative_arc
         }
-
+        curve = command_methods[command_key](*command_arguments)
         try:
-            curve = command_methods[command_key](*command_arguments)
+            pass
+            #curve = command_methods[command_key](*command_arguments)
         except TypeError as type_error:
             warnings.warn(f"Mis-formed input. Skipping command {command_key, command_arguments} because it caused the "
                           f"following error: \n{type_error}")

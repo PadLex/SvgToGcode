@@ -32,9 +32,6 @@ class EllipticalArc(Curve):
         return f"EllipticalArc(start: {self.start}, end: {self.end}, center: {self.center}, radii: {self.radii}," \
                f" rotation: {self.rotation}, start_angle: {self.start_angle}, sweep_angle: {self.sweep_angle})"
 
-    def sanity_check(self):
-        pass
-
     def point(self, t):
         angle = formulas.linear_map(self.start_angle, self.end_angle, t)
         return self.angle_to_point(angle)
@@ -50,3 +47,6 @@ class EllipticalArc(Curve):
 
     def angle_to_derivative(self, rad):
         return -(self.radii.y / self.radii.x) * math.tan(rad)**-1
+
+    def sanity_check(self):
+        pass
