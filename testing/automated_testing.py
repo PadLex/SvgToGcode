@@ -3,17 +3,17 @@ from testing import comparison_tests, other_tests
 
 
 if __name__ == "__main__":
-    svg_dir = f"{os.getcwd()}\\examples\\"
+    svg_dir = os.path.join(os.getcwd(), "examples")
     svg_names = {name[:-4] for name in os.listdir(svg_dir) if name[0] != '_'}
 
-    comparison_dir = f"{os.getcwd()}\\comparison_tests\\"
-    comparison_names = {name for name in os.listdir(comparison_dir) if os.path.isdir(comparison_dir + name)
+    comparison_dir = os.path.join(os.getcwd(), "comparison_tests")
+    comparison_names = {name for name in os.listdir(comparison_dir) if os.path.isdir(os.path.join(comparison_dir, name))
                         and name[0] != '_'}
 
-    other_dir = f"{os.getcwd()}\\other_tests\\"
-    other_names = {name for name in os.listdir(other_dir) if os.path.isdir(other_dir + name) and name[0] != '_'}
+    other_dir = os.path.join(os.getcwd(), "other_tests")
+    other_names = {name for name in os.listdir(other_dir) if os.path.isdir(os.path.join(other_dir, name)) and name[0] != '_'}
 
-    print("\nExecuting comparison tests...")
+    print(f"\nExecuting {len(comparison_names)} comparison tests...")
     for test_name in comparison_names:
 
         conflicts, missing_results = comparison_tests.run_tests(test_name, svg_names)
@@ -35,7 +35,7 @@ if __name__ == "__main__":
             print(f"The following examples are missing a verified result for the {test_name} test: {missing_results}")
             print(f"After verifying that the example-unverified.gcode is correct, rename it to example.gcode.\n")
 
-    print("\nExecuting other tests...")
+    print(f"\nExecuting {len(other_names)} other tests...")
     for test_name in other_names:
         conflicts = other_tests.run_tests(test_name, svg_names)
 
