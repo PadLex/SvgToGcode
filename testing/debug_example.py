@@ -17,9 +17,9 @@ if __name__ == "__main__":
     if test_type == "comparison":
         run_test = importlib.import_module(f"testing.comparison_tests.{test_name}.test").run_test
 
-        input_path = f"examples\\{example}.svg"
-        correct_path = f"comparison_tests\\{test_name}\\{example}.gcode"
-        output_path = f"comparison_tests\\{test_name}\\{example}-unverified.gcode"
+        input_path = os.path.join("examples", f"{example}.svg")
+        correct_path = os.path.join("comparison_tests", test_name, f"{example}.gcode")
+        output_path = os.path.join("comparison_tests", test_name, f"{example}-unverified.gcode")
 
         with open(input_path, 'rb') as svg_file:
             svg_string = svg_file.read()
@@ -38,5 +38,5 @@ if __name__ == "__main__":
     if test_type == "other":
         run_test = importlib.import_module(f"testing.other_tests.{test_name}.test").run_test
 
-        debug_file_name = f"other_tests\\linear_approximation\\{example}.svg"
+        debug_file_name = os.path.join("other_tests", "linear_approximation", f"{example}.svg")
         print(run_test(example, debug_file_name))
