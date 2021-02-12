@@ -37,9 +37,9 @@ class Gcode(Interface):
             command += f" F {self._current_speed}"
 
         # Move if not 0 and not None
-        command += f" X {x}" if x is not None else ''
-        command += f" Y {y}" if y is not None else ''
-        command += f" Z {z}" if z is not None else ''
+        command += f" X{x}" if x is not None else ''
+        command += f" Y{y}" if y is not None else ''
+        command += f" Z{z}" if z is not None else ''
 
         if self.position is not None or (x is not None and y is not None):
             if x is None:
