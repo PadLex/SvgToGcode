@@ -11,9 +11,9 @@ def run_tests(test_name, examples):
     conflicts = []
     missing_results = []
     for svg_name in examples:
-        svg_file_name = f"{os.getcwd()}\\examples\\{svg_name}.svg"
-        correct_file_name = f"{os.getcwd()}\\comparison_tests\\{test_name}\\{svg_name}.gcode"
-        output_file_name = f"{os.getcwd()}\\comparison_tests\\{test_name}\\{svg_name}-unverified.gcode"
+        svg_file_name = os.path.join(os.getcwd(), "examples", f"{svg_name}.svg")
+        correct_file_name = os.path.join(os.getcwd(), "comparison_tests", test_name, f"{svg_name}.gcode")
+        output_file_name = os.path.join(os.getcwd(), "comparison_tests", test_name, f"{svg_name}-unverified.gcode")
 
         run_test = importlib.import_module(f"testing.comparison_tests.{test_name}.test").run_test
         with open(svg_file_name, 'rb') as svg_file:
