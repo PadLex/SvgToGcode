@@ -63,6 +63,8 @@ class Compiler:
 
         gcode.extend(self.footer)
 
+        gcode = filter(lambda command: len(command) > 0, gcode)
+
         return '\n'.join(gcode)
 
     def compile_to_file(self, file_name: str, passes=1):

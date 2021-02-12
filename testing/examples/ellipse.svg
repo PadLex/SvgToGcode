@@ -12,7 +12,7 @@
         version="1.1"
         id="svg24"
         inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
-        sodipodi:docname="drawing.svg">
+        sodipodi:docname="ellipse.svg">
     <defs
             id="defs18"/>
     <sodipodi:namedview
@@ -71,17 +71,30 @@
             inkscape:label="Layer 1"
             inkscape:groupmode="layer"
             id="layer1">
+
         <path
                 d="M50 50 A 50 20 0 1 1 150 100"
+                visibility="visible"
                 style="fill:none;stroke:blue;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
         <path
+                d="M50 100 A 70 10 0 1 1 150 100"
+                visibility="visible"
+                style="fill:none;stroke:red;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
+        <path
                 d="M50 100 A 50 10 0 1 1 150 100 50 50 0 1 1 50 100 "
+                visibility="hidden"
                 style="fill:none;stroke:red;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
 
         <g inkscape:label="Layer 1" inkscape:groupmode="layer" id="layer1">
             <path d="m 50,50 a 50,20 0 1 0 100,0"
+                  visibility="visible"
                   style="fill:none;stroke:#0000ff;stroke-width:1.26458px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
                   id="path6"/>
+            <path d="m 50,50 a 50,50 0 1 0 100,0"
+                  visibility="visible"
+                  style="fill:none;stroke:#0000ff;stroke-width:1.26458px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+                  id="path6"/>
+
         </g>
     </g>
 </svg>

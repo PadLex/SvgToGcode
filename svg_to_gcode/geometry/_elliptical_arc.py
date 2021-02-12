@@ -18,11 +18,13 @@ class EllipticalArc(Curve):
         self.center = center
         self.radii = radii
         self.rotation = rotation
-        self.start_angle = start_angle
-        self.sweep_angle = sweep_angle % 2*math.pi  # Constrain angle below 360 degrees
+        # Constrain angle within +-360 degrees
+        max_angle = 2*math.pi
+        self.start_angle = formulas.mod_constrain(start_angle, -max_angle, max_angle)
+        self.sweep_angle = formulas.mod_constrain(sweep_angle, -max_angle, max_angle)
 
         # Calculate missing data
-        self.end_angle = start_angle + sweep_angle
+        self.end_angle = formulas.mod_constrain(start_angle + sweep_angle, -max_angle, max_angle)
         self.start = self.angle_to_point(self.start_angle)
         self.end = self.angle_to_point(self.end_angle)
 
@@ -38,7 +40,7 @@ class EllipticalArc(Curve):
 
     def angle_to_point(self, rad):
         at_origin = Vector(self.radii.x * math.cos(rad), self.radii.y * math.sin(rad))
-        translated = self.center + formulas.rotate(at_origin, self.rotation, True)
+        translated = self.center + formulas.rotate(at_origin, self.rotation, False)
         return translated
 
     def derivative(self, t):

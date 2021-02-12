@@ -65,7 +65,4 @@ the second is the location where the test can optionally save debug files. Retur
 or not the test succeeded.
 
 ## To-Do List
-- [x] _compiler.py: Don't turn off the laser if the new start is at the current position
-- [ ] Add support to parse shapes into curves
-- [ ] Add support for circular arc approximation
-- [ ] Use abc class for abstract classes
+There are a number of ToDo markers left around the code base. Feel free to resolve any of them.

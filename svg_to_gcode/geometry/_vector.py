@@ -42,4 +42,8 @@ class Vector:
 
     @staticmethod
     def dot_product(v1: "Vector", v2: "Vector"):
+        return v1.x*v2.x + v1.y*v2.y
+
+    @staticmethod
+    def cross_product(v1: "Vector", v2: "Vector"):
         return Vector(v1.x * (v2.x + v2.y), v1.y * (v2.x + v2.y))

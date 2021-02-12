@@ -30,10 +30,8 @@ class Path:
         self.end = Vector(0, 0)
         self.last_control = None  # type: Vector
 
-        self._parse_commands(d)
         try:
-            pass
-            #self._parse_commands(d)
+            self._parse_commands(d)
         except Exception as generic_exception:
             warnings.warn(f"Terminating path. The following unforeseen exception occurred: {generic_exception}")
 
@@ -124,10 +122,12 @@ class Path:
 
         Each sub-method must be implemented with the following structure:
         def descriptive_name(*command_arguments):
-            execute calculations, **do not modify or create any instance variables**
+            execute calculations and transformations, **do not modify or create any instance variables**
             generate curve
             modify instance variables
             return curve
+
+        Alternatively a sub-method may simply call a base command.
 
         :param command_key: a character representing a specific command based on the svg standard
         :param command_arguments: A list containing the arguments for the current command_key
@@ -245,11 +245,12 @@ class Path:
         # Generate EllipticalArc with center notation from svg endpoint notation.
         # Based on w3.org implementation notes. https://www.w3.org/TR/SVG2/implnote.html
         def absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, x, y):
-
             start = self.end
             end = Vector(x, y)
 
             rotation_rad = math.radians(deg_from_horizontal)
+            max_angle = 2 * math.pi
+            rotation_rad = formulas.mod_constrain(rotation_rad, -max_angle, max_angle)
 
             # Find and select one of the two possible eclipse centers by undoing the rotation (to simplify the math) and
             # then re-applying it.
@@ -258,14 +259,13 @@ class Path:
             px, py = primed_values.x, primed_values.y
 
             # Correct out-of-range radii
-            # ToDo investigate buggy behaviour
+            # ToDo investigate buggy behaviour when sweep angle > 180 deg
             rx = abs(rx)
             ry = abs(ry)
             if rx <= TOLERANCES['operation'] or ry <= TOLERANCES['operation']:
                 return absolute_line(x, y)
 
             delta = px**2/rx**2 + py**2/ry**2
-            print(delta, rx, ry)
 
             if delta > 1:
                 rx *= math.sqrt(delta)
@@ -288,17 +288,27 @@ class Path:
             v = Vector((-px - cx) / rx, (-py - cy) / ry)
 
             start_angle = formulas.angle_between_vectors(Vector(1, 0), u)
-            sweep_angle = formulas.angle_between_vectors(u, v)
+            sweep_angle_unbounded = formulas.angle_between_vectors(u, v)
+            sweep_angle = sweep_angle_unbounded % max_angle
 
-            arc = EllipticalArc(self._transform_coordinate_system(rotated_center), Vector(rx, -ry),
-                                rotation_rad, start_angle, sweep_angle)
+            if not sweep_flag and sweep_angle_unbounded > 0:
+                sweep_angle -= max_angle
+
+            if sweep_flag and sweep_angle_unbounded < 0:
+                sweep_angle += max_angle
+
+            transformed_center = self._transform_coordinate_system(rotated_center)
+            sweep_angle *= -1 if self.do_vertical_mirror else 1
+            start_angle *= 1 if self.do_vertical_mirror else 1
+
+            arc = EllipticalArc(transformed_center, Vector(rx, ry), rotation_rad, start_angle, sweep_angle)
 
             self.end = Vector(x, y)
 
             return arc
 
         def relative_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, dx, dy):
-            return absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, dx, dy)
+            return absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, self.end.x + dx, self.end.x + dy)
 
         command_methods = {
             # Only move end point
@@ -329,10 +339,9 @@ class Path:
             'A': absolute_arc,
             'a': relative_arc
         }
-        curve = command_methods[command_key](*command_arguments)
+
         try:
-            pass
-            #curve = command_methods[command_key](*command_arguments)
+            curve = command_methods[command_key](*command_arguments)
         except TypeError as type_error:
             warnings.warn(f"Mis-formed input. Skipping command {command_key, command_arguments} because it caused the "
                           f"following error: \n{type_error}")
