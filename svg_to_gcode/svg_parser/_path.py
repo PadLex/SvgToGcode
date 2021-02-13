@@ -173,6 +173,8 @@ class Path:
         # Draw Curves
         def absolute_cubic_bazier(control1_x, control1_y, control2_x, control2_y, x, y):
 
+            self.start = Vector(x, y)
+
             trans_start = self._transform_coordinate_system(self.end)
             trans_end = self._transform_coordinate_system(Vector(x, y))
             trans_control1 = self._transform_coordinate_system(Vector(control1_x, control1_y))
