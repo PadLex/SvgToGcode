@@ -17,7 +17,7 @@ class Path:
     command_lengths = {'M': 2, 'm': 2, 'L': 2, 'l': 2, 'H': 1, 'h': 1, 'V': 1, 'v': 1, 'Z': 0, 'z': 0, 'C': 6, 'c': 6,
                        'Q': 4, 'q': 4, 'S': 4, 's': 4, 'T': 2, 't': 2, 'A': 7, 'a': 7}
 
-    __slots__ = "curves", "start", "end", "last_control", "canvas_height", "do_vertical_mirror", \
+    __slots__ = "curves", "initial_point", "current_point", "last_control", "canvas_height", "do_vertical_mirror", \
                 "do_vertical_translate", "draw_move"
 
     def __init__(self, d: str, canvas_height: float, do_vertical_mirror=True, do_vertical_translate=True):
@@ -26,8 +26,8 @@ class Path:
         self.do_vertical_translate = do_vertical_translate
 
         self.curves = []
-        self.start = None  # type: Vector
-        self.end = Vector(0, 0)
+        self.initial_point = Vector(0, 0)  # type: Vector
+        self.current_point = Vector(0, 0)
         self.last_control = None  # type: Vector
 
         try:
@@ -133,47 +133,48 @@ class Path:
         :param command_arguments: A list containing the arguments for the current command_key
         """
 
-        # Only move end point
+        # Establish a new initial point and a new current point. (multiple coordinates are parsed as lineto commands)
         def absolute_move(x, y):
-            self.end = Vector(x, y)
+            self.initial_point = Vector(x, y)
+            self.current_point = Vector(x, y)
             return None
 
         def relative_move(dx, dy):
-            return absolute_move(*(self.end + Vector(dx, dy)))
+            return absolute_move(*(self.current_point + Vector(dx, dy)))
 
         # Draw straight line
         def absolute_line(x, y):
-            start = self.end
+            start = self.current_point
             end = Vector(x, y)
 
             line = Line(self._transform_coordinate_system(start), self._transform_coordinate_system(end))
 
-            self.end = end
+            self.current_point = end
 
             return line
 
         def relative_line(dx, dy):
-            return absolute_line(*(self.end + Vector(dx, dy)))
+            return absolute_line(*(self.current_point + Vector(dx, dy)))
 
         def absolute_horizontal_line(x):
-            return absolute_line(x, self.end.y)
+            return absolute_line(x, self.current_point.y)
 
         def relative_horizontal_line(dx):
-            return absolute_horizontal_line(self.end.x + dx)
+            return absolute_horizontal_line(self.current_point.x + dx)
 
         def absolute_vertical_line(y):
-            return absolute_line(self.end.x, y)
+            return absolute_line(self.current_point.x, y)
 
         def relative_vertical_line(dy):
-            return absolute_vertical_line(self.end.y + dy)
+            return absolute_vertical_line(self.current_point.y + dy)
 
         def close_path():
-            return absolute_line(*self.start)
+            return absolute_line(*self.initial_point)
 
-        # Draw Curves
+        # Draw curvy curves
         def absolute_cubic_bazier(control1_x, control1_y, control2_x, control2_y, x, y):
 
-            trans_start = self._transform_coordinate_system(self.end)
+            trans_start = self._transform_coordinate_system(self.current_point)
             trans_end = self._transform_coordinate_system(Vector(x, y))
             trans_control1 = self._transform_coordinate_system(Vector(control1_x, control1_y))
             trans_control2 = self._transform_coordinate_system(Vector(control2_x, control2_y))
@@ -181,17 +182,17 @@ class Path:
             cubic_bezier = CubicBazier(trans_start, trans_end, trans_control1, trans_control2)
 
             self.last_control = Vector(control2_x, control2_y)
-            self.end = Vector(x, y)
+            self.current_point = Vector(x, y)
 
             return cubic_bezier
 
         def relative_cubic_bazier(dx1, dy1, dx2, dy2, dx, dy):
-            return absolute_cubic_bazier(self.end.x + dx1, self.end.y + dy1,
-                                         self.end.x + dx2, self.end.y + dy2,
-                                         self.end.x + dx, self.end.y + dy)
+            return absolute_cubic_bazier(self.current_point.x + dx1, self.current_point.y + dy1,
+                                         self.current_point.x + dx2, self.current_point.y + dy2,
+                                         self.current_point.x + dx, self.current_point.y + dy)
 
         def absolute_cubic_bezier_extension(x2, y2, x, y):
-            start = self.end
+            start = self.current_point
             control2 = Vector(x2, y2)
             end = Vector(x, y)
 
@@ -201,33 +202,33 @@ class Path:
             else:
                 bazier = absolute_quadratic_bazier(*control2, *end)
 
-            self.end = start
+            self.current_point = start
 
             return bazier
 
         def relative_cubic_bazier_extension(dx2, dy2, dx, dy):
-            return absolute_cubic_bezier_extension(self.end.x + dx2, self.end.y + dy2,
-                                                   self.end.x + dx, self.end.y + dy)
+            return absolute_cubic_bezier_extension(self.current_point.x + dx2, self.current_point.y + dy2,
+                                                   self.current_point.x + dx, self.current_point.y + dy)
 
         def absolute_quadratic_bazier(control1_x, control1_y, x, y):
 
-            trans_end = self._transform_coordinate_system(self.end)
+            trans_end = self._transform_coordinate_system(self.current_point)
             trans_new_end = self._transform_coordinate_system(Vector(x, y))
             trans_control1 = self._transform_coordinate_system(Vector(control1_x, control1_y))
 
             quadratic_bezier = QuadraticBezier(trans_end, trans_new_end, trans_control1)
 
             self.last_control = Vector(control1_x, control1_y)
-            self.end = Vector(x, y)
+            self.current_point = Vector(x, y)
 
             return quadratic_bezier
 
         def relative_quadratic_bazier(dx1, dy1, dx, dy):
-            return absolute_quadratic_bazier(self.end.x + dx1, self.end.y + dy1,
-                                             self.end.x + dx, self.end.y + dy)
+            return absolute_quadratic_bazier(self.current_point.x + dx1, self.current_point.y + dy1,
+                                             self.current_point.x + dx, self.current_point.y + dy)
 
         def absolute_quadratic_bazier_extension(x, y):
-            start = self.end
+            start = self.current_point
             end = Vector(x, y)
 
             if self.last_control:
@@ -236,16 +237,16 @@ class Path:
             else:
                 bazier = absolute_quadratic_bazier(*start, *end)
 
-            self.end = end
+            self.current_point = end
             return bazier
 
         def relative_quadratic_bazier_extension(dx, dy):
-            return absolute_quadratic_bazier_extension(self.end.x + dx, self.end.y + dy)
+            return absolute_quadratic_bazier_extension(self.current_point.x + dx, self.current_point.y + dy)
 
         # Generate EllipticalArc with center notation from svg endpoint notation.
         # Based on w3.org implementation notes. https://www.w3.org/TR/SVG2/implnote.html
         def absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, x, y):
-            start = self.end
+            start = self.current_point
             end = Vector(x, y)
 
             rotation_rad = math.radians(deg_from_horizontal)
@@ -303,12 +304,12 @@ class Path:
 
             arc = EllipticalArc(transformed_center, Vector(rx, ry), rotation_rad, start_angle, sweep_angle)
 
-            self.end = Vector(x, y)
+            self.current_point = Vector(x, y)
 
             return arc
 
         def relative_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, dx, dy):
-            return absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, self.end.x + dx, self.end.x + dy)
+            return absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, self.current_point.x + dx, self.current_point.x + dy)
 
         command_methods = {
             # Only move end point
@@ -351,9 +352,6 @@ class Path:
         else:
             if curve is not None:
                 self.curves.append(curve)
-
-        if self.start is None:
-            self.start = Vector(*self.end)
 
         if verbose:
             print(f"{command_key}{tuple(command_arguments)} -> {curve}")
