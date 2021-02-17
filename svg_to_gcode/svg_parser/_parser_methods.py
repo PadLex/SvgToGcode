@@ -35,35 +35,29 @@ def parse_root(root: ElementTree.Element, canvas_height=None, transform=True, dr
 
     curves = []
 
-    if draw_hidden:
-        # Parse paths
-        for element in root.iter("{%s}path" % NAMESPACES["svg"]):
-            path = Path(element.attrib['d'], canvas_height, transform, transform)
-            curves.extend(path.curves)
-    else:
-        # Draw visible elements (Depth-first search)
-        for element in list(root):
+    # Draw visible elements (Depth-first search)
+    for element in list(root):
 
-            # display cannot be overridden by inheritance. Just skip the element
-            if _has_style(element, "display", "none"):
-                continue
+        # display cannot be overridden by inheritance. Just skip the element
+        if _has_style(element, "display", "none"):
+            continue
 
-            # Is the element and it's root not hidden?
-            visible = _visible_root and not (_has_style(element, "visibility", "hidden")
-                                             or _has_style(element, "visibility", "collapse"))
-            # Override inherited visibility
-            visible = visible or (_has_style(element, "visibility", "visible"))
+        # Is the element and it's root not hidden?
+        visible = _visible_root and not (_has_style(element, "visibility", "hidden")
+                                         or _has_style(element, "visibility", "collapse"))
+        # Override inherited visibility
+        visible = visible or (_has_style(element, "visibility", "visible"))
 
-            transparent = _has_style(element, "opacity", "0")
+        transparent = _has_style(element, "opacity", "0")
 
-            # If the current element is opaque and visible, draw it
-            if not transparent and visible:
-                if element.tag == "{%s}path" % NAMESPACES["svg"]:
-                    path = Path(element.attrib['d'], canvas_height, transform, transform)
-                    curves.extend(path.curves)
+        # If the current element is opaque and visible, draw it
+        if draw_hidden or (visible and not transparent):
+            if element.tag == "{%s}path" % NAMESPACES["svg"]:
+                path = Path(element.attrib['d'], canvas_height, transform, transform)
+                curves.extend(path.curves)
 
-            # Continue the recursion
-            curves.extend(parse_root(element, canvas_height, transform, False, visible))
+        # Continue the recursion
+        curves.extend(parse_root(element, canvas_height, transform, False, visible))
 
     # ToDo implement shapes class
     return curves

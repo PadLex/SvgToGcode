@@ -9,6 +9,7 @@ specific maintenance notes:
 """
 
 from svg_to_gcode.geometry._vector import Vector
+from svg_to_gcode.geometry._matrix import Matrix, IdentityMatrix
 
 from svg_to_gcode.geometry._abstract_curve import Curve
 from svg_to_gcode.geometry._line import Line
