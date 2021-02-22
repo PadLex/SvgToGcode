@@ -37,7 +37,14 @@ def generate_debug(approximations, svg_file_name, debug_file_name):
         path.set("fill", "none")
         path.set("stroke", "black")
         path.set("stroke-width", f"{TOLERANCES['approximation']}mm")
-        path.set("style", "")
+
+        style = path.get("style")
+        if style and "display:none" in style:
+            path.set("style", "display:none")
+        elif style and ("visibility:hidden" in style or "visibility:collapse" in style):
+            path.set("style", "visibility:hidden")
+        else:
+            path.set("style", "")
 
     group = Element("{%s}g" % name_space)
 

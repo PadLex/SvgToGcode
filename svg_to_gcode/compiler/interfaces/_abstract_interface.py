@@ -51,7 +51,7 @@ class Interface:
         Make the coordinate space absolute. ie. move relative to origin not current position.
 
         return '' if the target of the interface only supports absolute space. If the target only supports
-        relative coordinate space, this command should return '' and the child class must transform all inputs from
+        relative coordinate space, this command should return '' and the child class must transform_origin all inputs from
         absolute positions to relative positions.
 
         :return: Appropriate command.

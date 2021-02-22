@@ -18,12 +18,14 @@ class Path:
                        'Q': 4, 'q': 4, 'S': 4, 's': 4, 'T': 2, 't': 2, 'A': 7, 'a': 7}
 
     __slots__ = "curves", "initial_point", "current_point", "last_control", "canvas_height", "do_vertical_mirror", \
-                "do_vertical_translate", "draw_move"
+                "do_vertical_translate", "draw_move", "transformation"
 
-    def __init__(self, d: str, canvas_height: float, do_vertical_mirror=True, do_vertical_translate=True):
+    def __init__(self, d: str, canvas_height: float, do_vertical_mirror=True, do_vertical_translate=True,
+                 transformation=None):
         self.canvas_height = canvas_height
         self.do_vertical_mirror = do_vertical_mirror
         self.do_vertical_translate = do_vertical_translate
+        self.transformation = transformation
 
         self.curves = []
         self.initial_point = Vector(0, 0)  # type: Vector
@@ -33,6 +35,7 @@ class Path:
         try:
             self._parse_commands(d)
         except Exception as generic_exception:
+            raise generic_exception
             warnings.warn(f"Terminating path. The following unforeseen exception occurred: {generic_exception}")
 
     def __repr__(self):
@@ -103,9 +106,12 @@ class Path:
 
     def _transform_coordinate_system(self, point: Vector):
         """
-        If both do_vertical_mirror and do_vertical_translate are true, it will transform a point form a coordinate
+        If both do_vertical_mirror and do_vertical_translate are true, it will transform_origin a point form a coordinate
         system with the origin at the top-left, to one with origin at the bottom-right.
         """
+
+        if self.transformation:
+            point = self.transformation.apply_transformation(point)
 
         if self.do_vertical_mirror:
             point = Vector(point.x, -point.y)
@@ -344,6 +350,7 @@ class Path:
         try:
             curve = command_methods[command_key](*command_arguments)
         except TypeError as type_error:
+            raise type_error
             warnings.warn(f"Mis-formed input. Skipping command {command_key, command_arguments} because it caused the "
                           f"following error: \n{type_error}")
         except ValueError as value_error:
