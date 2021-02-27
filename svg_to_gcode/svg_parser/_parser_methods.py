@@ -17,7 +17,7 @@ def _has_style(element: ElementTree.Element, key: str, value: str) -> bool:
 
 # Todo deal with viewBoxes
 def parse_root(root: ElementTree.Element, canvas_height=None, transform_origin=True, draw_hidden=False,
-               _visible_root=True, _root_transformation=None) -> List[Curve]:
+               visible_root=True, root_transformation=None) -> List[Curve]:
 
     """
     Recursively parse an etree root's children into geometric curves.
@@ -28,7 +28,8 @@ def parse_root(root: ElementTree.Element, canvas_height=None, transform_origin=T
     :param transform_origin: Whether or not to transform input coordinates from the svg coordinate system to standard
     cartesian system. Depends on canvas_height for calculations.
     :param draw_hidden: Whether or not to draw hidden elements based on their display, visibility and opacity attributes.
-    :param _visible_root: Internally used to specify whether or the root is visible. (Inheritance can be overridden)
+    :param visible_root: Specifies whether or the root is visible. (Inheritance can be overridden)
+    :param root_transformation: Specifies whether or the root's transformation matrix. (Transformations are inheritable)
     :return: A list of geometric curves describing the svg. Use the Compiler sub-module to compile them to gcode.
     """
 
@@ -47,7 +48,7 @@ def parse_root(root: ElementTree.Element, canvas_height=None, transform_origin=T
         if display or element.tag == "{%s}defs" % NAMESPACES["svg"]:
             continue
 
-        transformation = deepcopy(_root_transformation) if _root_transformation else None
+        transformation = deepcopy(root_transformation) if root_transformation else None
 
         transform = element.get('transform')
         if transform:
@@ -55,8 +56,8 @@ def parse_root(root: ElementTree.Element, canvas_height=None, transform_origin=T
             transformation.add_transform(transform)
 
         # Is the element and it's root not hidden?
-        visible = _visible_root and not (_has_style(element, "visibility", "hidden")
-                                         or _has_style(element, "visibility", "collapse"))
+        visible = visible_root and not (_has_style(element, "visibility", "hidden")
+                                        or _has_style(element, "visibility", "collapse"))
         # Override inherited visibility
         visible = visible or (_has_style(element, "visibility", "visible"))
 

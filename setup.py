@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as file:
 
 setuptools.setup(
     name="svg_to_gcode",
-    version="1.4.1",
+    version="1.4.2",
     author="Padlex",
     author_email="",
     description="The definitive NPM module to construct gcode from svg files.",
