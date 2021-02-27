@@ -40,16 +40,19 @@ def parse_root(root: ElementTree.Element, canvas_height=None, transform_origin=T
 
     # Draw visible elements (Depth-first search)
     for element in list(root):
+
+        # display cannot be overridden by inheritance. Just skip the element
+        display = _has_style(element, "display", "none")
+
+        if display or element.tag == "{%s}defs" % NAMESPACES["svg"]:
+            continue
+
         transformation = deepcopy(_root_transformation) if _root_transformation else None
 
         transform = element.get('transform')
         if transform:
             transformation = Transformation() if transformation is None else transformation
             transformation.add_transform(transform)
-
-        # display cannot be overridden by inheritance. Just skip the element
-        if _has_style(element, "display", "none"):
-            continue
 
         # Is the element and it's root not hidden?
         visible = _visible_root and not (_has_style(element, "visibility", "hidden")
