@@ -5,6 +5,7 @@ from typing import List
 
 from svg_to_gcode.geometry import Vector
 from svg_to_gcode.geometry import Line, EllipticalArc, CubicBazier, QuadraticBezier
+from svg_to_gcode.svg_parser import Transformation
 from svg_to_gcode import formulas
 from svg_to_gcode import TOLERANCES
 
@@ -17,20 +18,28 @@ class Path:
     command_lengths = {'M': 2, 'm': 2, 'L': 2, 'l': 2, 'H': 1, 'h': 1, 'V': 1, 'v': 1, 'Z': 0, 'z': 0, 'C': 6, 'c': 6,
                        'Q': 4, 'q': 4, 'S': 4, 's': 4, 'T': 2, 't': 2, 'A': 7, 'a': 7}
 
-    __slots__ = "curves", "initial_point", "current_point", "last_control", "canvas_height", "do_vertical_mirror", \
-                "do_vertical_translate", "draw_move", "transformation"
+    __slots__ = "curves", "initial_point", "current_point", "last_control", "canvas_height", "draw_move", \
+                "transform_origin", "point_transformation"
 
-    def __init__(self, d: str, canvas_height: float, do_vertical_mirror=True, do_vertical_translate=True,
-                 transformation=None):
+    def __init__(self, d: str, canvas_height: float, transform_origin=True, transformation=None):
         self.canvas_height = canvas_height
-        self.do_vertical_mirror = do_vertical_mirror
-        self.do_vertical_translate = do_vertical_translate
-        self.transformation = transformation
+        self.transform_origin = transform_origin
 
         self.curves = []
         self.initial_point = Vector(0, 0)  # type: Vector
         self.current_point = Vector(0, 0)
         self.last_control = None  # type: Vector
+
+        point_transformation = Transformation()
+
+        if self.transform_origin:
+            point_transformation.add_translation(0, canvas_height)
+            point_transformation.add_scale(1, -1)
+
+        if transformation is not None:
+            point_transformation.extend(transformation)
+
+        self.point_transformation = point_transformation
 
         try:
             self._parse_commands(d)
@@ -104,22 +113,8 @@ class Path:
 
             i += 1
 
-    def _transform_coordinate_system(self, point: Vector):
-        """
-        If both do_vertical_mirror and do_vertical_translate are true, it will transform_origin a point form a coordinate
-        system with the origin at the top-left, to one with origin at the bottom-right.
-        """
-
-        if self.transformation:
-            point = self.transformation.apply_transformation(point)
-
-        if self.do_vertical_mirror:
-            point = Vector(point.x, -point.y)
-
-        if self.do_vertical_translate:
-            point += Vector(0, self.canvas_height)
-
-        return point
+    def _apply_transformations(self, point: Vector):
+        return self.point_transformation.apply_transformation(point)
 
     def _add_svg_curve(self, command_key: str, command_arguments: List[float]):
         """
@@ -153,7 +148,7 @@ class Path:
             start = self.current_point
             end = Vector(x, y)
 
-            line = Line(self._transform_coordinate_system(start), self._transform_coordinate_system(end))
+            line = Line(self._apply_transformations(start), self._apply_transformations(end))
 
             self.current_point = end
 
@@ -180,10 +175,10 @@ class Path:
         # Draw curvy curves
         def absolute_cubic_bazier(control1_x, control1_y, control2_x, control2_y, x, y):
 
-            trans_start = self._transform_coordinate_system(self.current_point)
-            trans_end = self._transform_coordinate_system(Vector(x, y))
-            trans_control1 = self._transform_coordinate_system(Vector(control1_x, control1_y))
-            trans_control2 = self._transform_coordinate_system(Vector(control2_x, control2_y))
+            trans_start = self._apply_transformations(self.current_point)
+            trans_end = self._apply_transformations(Vector(x, y))
+            trans_control1 = self._apply_transformations(Vector(control1_x, control1_y))
+            trans_control2 = self._apply_transformations(Vector(control2_x, control2_y))
 
             cubic_bezier = CubicBazier(trans_start, trans_end, trans_control1, trans_control2)
 
@@ -218,9 +213,9 @@ class Path:
 
         def absolute_quadratic_bazier(control1_x, control1_y, x, y):
 
-            trans_end = self._transform_coordinate_system(self.current_point)
-            trans_new_end = self._transform_coordinate_system(Vector(x, y))
-            trans_control1 = self._transform_coordinate_system(Vector(control1_x, control1_y))
+            trans_end = self._apply_transformations(self.current_point)
+            trans_new_end = self._apply_transformations(Vector(x, y))
+            trans_control1 = self._apply_transformations(Vector(control1_x, control1_y))
 
             quadratic_bezier = QuadraticBezier(trans_end, trans_new_end, trans_control1)
 
@@ -304,9 +299,9 @@ class Path:
             if sweep_flag and sweep_angle_unbounded < 0:
                 sweep_angle += max_angle
 
-            transformed_center = self._transform_coordinate_system(rotated_center)
-            sweep_angle *= -1 if self.do_vertical_mirror else 1
-            start_angle *= 1 if self.do_vertical_mirror else 1
+            transformed_center = self._apply_transformations(rotated_center)
+            sweep_angle *= -1 if self.transform_origin else 1
+            start_angle *= 1 if self.transform_origin else 1
 
             arc = EllipticalArc(transformed_center, Vector(rx, ry), rotation_rad, start_angle, sweep_angle)
 

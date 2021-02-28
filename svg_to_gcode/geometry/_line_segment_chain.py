@@ -29,20 +29,25 @@ class LineSegmentChain(Chain):
 
         self._curves.append(line2)
 
-    def to_svg_path(self, wrapped=True, transform=False, height=None):
-        """A handy debugging function which the current line-chain in svg form"""
+    def to_svg_path(self, wrapped=True, transformation=None):
+        """
+        A handy debugging function which converts the current line-chain to svg form
 
-        if transform:
-            assert height
-            start_ = Vector(self._curves[0].start.x, height-self._curves[0].start.y)
-        else:
-            start_ = Vector(self._curves[0].start.x, self._curves[0].start.y)
+        :param wrapped: Whether or not to return just d or also wrap it with the full <path></path> element
+        :param transformation: A transformation to apply to every line before converting it.
+        """
 
-        d = f"M{start_.x} {start_.y}"
+        start = Vector(self._curves[0].start.x, self._curves[0].start.y)
+        if transformation:
+            start = transformation.apply_transformation(start)
+
+        d = f"M{start.x} {start.y}"
 
         for line in self._curves:
-            end_ = Vector(line.end.x, height-line.end.y) if transform else Vector(line.end.x, line.end.y)
-            d += f" L {end_.x} {end_.y}"
+            end = Vector(line.end.x, line.end.y)
+            if transformation:
+                end = transformation.apply_transformation(end)
+            d += f" L {end.x} {end.y}"
 
         if not wrapped:
             return d

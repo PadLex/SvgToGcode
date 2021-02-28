@@ -6,6 +6,6 @@ specific maintenance notes:
     parser classes must transform_origin input coordinates to the bottom-left coordinate system.
 """
 
-from svg_to_gcode.svg_parser._path import Path
 from svg_to_gcode.svg_parser._transformation import Transformation
+from svg_to_gcode.svg_parser._path import Path
 from svg_to_gcode.svg_parser._parser_methods import parse_file, parse_string, parse_root

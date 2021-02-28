@@ -1,7 +1,7 @@
 from xml.etree.ElementTree import Element, ElementTree
 
-from svg_to_gcode.svg_parser import parse_file
-from svg_to_gcode.geometry import LineSegmentChain
+from svg_to_gcode.svg_parser import parse_file, Transformation
+from svg_to_gcode.geometry import LineSegmentChain, IdentityMatrix
 
 from svg_to_gcode import TOLERANCES
 
@@ -48,9 +48,13 @@ def generate_debug(approximations, svg_file_name, debug_file_name):
 
     group = Element("{%s}g" % name_space)
 
+    change_origin = Transformation()
+    change_origin.add_scale(1, -1)
+    change_origin.add_translation(0, -canvas_height)
+
     for approximation in approximations:
         path = Element("{%s}path" % name_space)
-        path.set("d", approximation.to_svg_path(wrapped=False, transform=True, height=canvas_height))
+        path.set("d", approximation.to_svg_path(wrapped=False, transformation=change_origin))
         path.set("fill", "none")
         path.set("stroke", "red")
         path.set("stroke-width", f"{TOLERANCES['approximation']/2}mm")

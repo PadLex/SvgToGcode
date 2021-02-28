@@ -83,6 +83,7 @@
        sodipodi:nodetypes="ccc"
        style="fill:none;stroke:#0000ff;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 50,50 C 0,0 0,80 40,0 50,30 30,0 30,0"
+       transform="scale(1, -1) translate(0, -70)"
        id="path1401" />
     <path
        style="fill:none;stroke:#008000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"

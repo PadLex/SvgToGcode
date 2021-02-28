@@ -29,7 +29,7 @@ def parse_root(root: ElementTree.Element, canvas_height=None, transform_origin=T
     cartesian system. Depends on canvas_height for calculations.
     :param draw_hidden: Whether or not to draw hidden elements based on their display, visibility and opacity attributes.
     :param visible_root: Specifies whether or the root is visible. (Inheritance can be overridden)
-    :param root_transformation: Specifies whether or the root's transformation matrix. (Transformations are inheritable)
+    :param root_transformation: Specifies whether the root's transformation. (Transformations are inheritable)
     :return: A list of geometric curves describing the svg. Use the Compiler sub-module to compile them to gcode.
     """
 
@@ -66,7 +66,7 @@ def parse_root(root: ElementTree.Element, canvas_height=None, transform_origin=T
         # If the current element is opaque and visible, draw it
         if draw_hidden or (visible and not transparent):
             if element.tag == "{%s}path" % NAMESPACES["svg"]:
-                path = Path(element.attrib['d'], canvas_height, transform_origin, transform_origin, transformation)
+                path = Path(element.attrib['d'], canvas_height, transform_origin, transformation)
                 curves.extend(path.curves)
 
         # Continue the recursion
