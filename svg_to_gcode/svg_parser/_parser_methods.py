@@ -16,7 +16,7 @@ def _has_style(element: ElementTree.Element, key: str, value: str) -> bool:
 
 
 # Todo deal with viewBoxes
-def parse_root(root: ElementTree.Element, canvas_height=None, transform_origin=True, draw_hidden=False,
+def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=None, draw_hidden=False,
                visible_root=True, root_transformation=None) -> List[Curve]:
 
     """
@@ -76,33 +76,33 @@ def parse_root(root: ElementTree.Element, canvas_height=None, transform_origin=T
     return curves
 
 
-def parse_string(svg_string: str, canvas_height=None, transform=True, draw_hidden=False) -> List[Curve]:
+def parse_string(svg_string: str, canvas_height=None, transform_origin=True, draw_hidden=False) -> List[Curve]:
     """
         Recursively parse an svg string into geometric curves. (Wrapper for parse_root)
 
         :param svg_string: The etree element who's children should be recursively parsed. The root will not be drawn.
         :param canvas_height: The height of the canvas. By default the height attribute of the root is used. If the root
         does not contain the height attribute, it must be either manually specified or transform_origin must be False.
-        :param transform: Whether or not to transform_origin input coordinates from the svg coordinate system to standard cartesian
+        :param transform_origin: Whether or not to transform input coordinates from the svg coordinate system to standard cartesian
          system. Depends on canvas_height for calculations.
         :param draw_hidden: Whether or not to draw hidden elements based on their display, visibility and opacity attributes.
         :return: A list of geometric curves describing the svg. Use the Compiler sub-module to compile them to gcode.
     """
     root = ElementTree.fromstring(svg_string)
-    return parse_root(root, canvas_height, transform, draw_hidden)
+    return parse_root(root, transform_origin, canvas_height, draw_hidden)
 
 
-def parse_file(file_path: str, canvas_height=None, transform=True, draw_hidden=False) -> List[Curve]:
+def parse_file(file_path: str, canvas_height=None, transform_origin=True, draw_hidden=False) -> List[Curve]:
     """
             Recursively parse an svg file into geometric curves. (Wrapper for parse_root)
 
             :param file_path: The etree element who's children should be recursively parsed. The root will not be drawn.
             :param canvas_height: The height of the canvas. By default the height attribute of the root is used. If the root
             does not contain the height attribute, it must be either manually specified or transform_origin must be False.
-            :param transform: Whether or not to transform_origin input coordinates from the svg coordinate system to standard cartesian
+            :param transform_origin: Whether or not to transform input coordinates from the svg coordinate system to standard cartesian
              system. Depends on canvas_height for calculations.
             :param draw_hidden: Whether or not to draw hidden elements based on their display, visibility and opacity attributes.
             :return: A list of geometric curves describing the svg. Use the Compiler sub-module to compile them to gcode.
         """
     root = ElementTree.parse(file_path).getroot()
-    return parse_root(root, canvas_height, transform, draw_hidden)
+    return parse_root(root, transform_origin, canvas_height, draw_hidden)
