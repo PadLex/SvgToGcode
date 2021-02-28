@@ -1,11 +1,13 @@
 from xml.etree.ElementTree import Element, ElementTree
 
-from svg_to_gcode.svg_parser import parse_file, Transformation
-from svg_to_gcode.geometry import LineSegmentChain, IdentityMatrix
+from svg_to_gcode.svg_parser import parse_file, Transformation, debug_methods
+from svg_to_gcode.geometry import LineSegmentChain
 
 from svg_to_gcode import TOLERANCES
 
 name_space = 'http://www.w3.org/2000/svg'
+
+TOLERANCES['approximation'] = 0.1
 
 
 def run_test(svg_file_name, debug_file_name):
@@ -13,11 +15,11 @@ def run_test(svg_file_name, debug_file_name):
 
     success = True
     approximations = []
+    count = 0
     for curve in curves:
         approximation = LineSegmentChain.line_segment_approximation(curve)
         approximations.append(approximation)
-
-        # Todo find a way to automatically determine success. Right now manual revision of debug files is required.
+        count += approximation.chain_size()
 
     generate_debug(approximations, svg_file_name, debug_file_name)
 
@@ -52,12 +54,19 @@ def generate_debug(approximations, svg_file_name, debug_file_name):
     change_origin.add_scale(1, -1)
     change_origin.add_translation(0, -canvas_height)
 
+    defs = debug_methods.arrow_defs()
+    group.append(defs)
     for approximation in approximations:
+        path = debug_methods.to_svg_path(approximation, color="red", stroke_width=f"{TOLERANCES['approximation']/2}mm",
+                                         transformation=change_origin, draw_arrows=True)
+
+        """
         path = Element("{%s}path" % name_space)
-        path.set("d", approximation.to_svg_path(wrapped=False, transformation=change_origin))
+        path.set("d", )
+        add_def = False
         path.set("fill", "none")
-        path.set("stroke", "red")
-        path.set("stroke-width", f"{TOLERANCES['approximation']/2}mm")
+        """
+
 
         group.append(path)
 

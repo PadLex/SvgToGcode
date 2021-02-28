@@ -24,10 +24,10 @@ class Chain(Curve):
 
     def length(self):
         """
-        Return the total length of the chain.
+        Return the geometric length of the chain.
         The __len__ magic method wasn't overridden to avoid ambiguity between total length and chain size.
         """
-        return sum([len(curve) for curve in self._curves])
+        return sum([curve.length() for curve in self._curves])
 
     def chain_size(self):
         """

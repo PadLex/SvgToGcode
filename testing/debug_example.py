@@ -10,9 +10,9 @@ from testing.comparison_tests import compare_files
 
 
 if __name__ == "__main__":
-    example = "ellipse"
-    test_name = "basic_usage"
-    test_type = ["comparison", "other"][0]
+    example = "parser_challenge"
+    test_name = "linear_approximation"
+    test_type = ["comparison", "other"][1]
 
     if test_type == "comparison":
         run_test = importlib.import_module(f"testing.comparison_tests.{test_name}.test").run_test
@@ -36,7 +36,8 @@ if __name__ == "__main__":
                 print("Ups, the outputs are different")
 
     if test_type == "other":
-        run_test = importlib.import_module(f"testing.other_tests.{test_name}.test").run_test
+        svg_file_name = os.path.join("examples", f"{example}.svg")
+        debug_file_name = os.path.join("other_tests", test_name, f"{example}.svg")
 
-        debug_file_name = os.path.join("other_tests", "linear_approximation", f"{example}.svg")
-        print(run_test(example, debug_file_name))
+        run_test = importlib.import_module(f"testing.other_tests.{test_name}.test").run_test
+        print(run_test(svg_file_name, debug_file_name))

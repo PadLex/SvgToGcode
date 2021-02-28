@@ -11,7 +11,6 @@ class LineSegmentChain(Chain):
     LineSegmentChains can be instantiated either conventionally or through the static method line_segment_approximation(),
     which approximates any Curve with a series of line-segments contained in a new LineSegmentChain instance.
     """
-
     def __repr__(self):
         return f"{type(self)}({len(self._curves)} curves: {[line.__repr__() for line in self._curves[:2]]}...)"
 
@@ -29,38 +28,27 @@ class LineSegmentChain(Chain):
 
         self._curves.append(line2)
 
-    def to_svg_path(self, wrapped=True, transformation=None):
-        """
-        A handy debugging function which converts the current line-chain to svg form
-
-        :param wrapped: Whether or not to return just d or also wrap it with the full <path></path> element
-        :param transformation: A transformation to apply to every line before converting it.
-        """
-
-        start = Vector(self._curves[0].start.x, self._curves[0].start.y)
-        if transformation:
-            start = transformation.apply_transformation(start)
-
-        d = f"M{start.x} {start.y}"
-
-        for line in self._curves:
-            end = Vector(line.end.x, line.end.y)
-            if transformation:
-                end = transformation.apply_transformation(end)
-            d += f" L {end.x} {end.y}"
-
-        if not wrapped:
-            return d
-
-        style = "fill:none;stroke:black;stroke-width:0.864583px;stroke-linecap:butt;stroke-linejoin:miter;stroke" \
-                "-opacity:1 "
-
-        return f"""<path\nd="{d}"\nstyle="{style}"\n/>"""
-
     @staticmethod
-    def line_segment_approximation(shape, increment_growth=3 / 2, error_cap=TOLERANCES['approximation'],
-                                   error_floor=1.5 * TOLERANCES['approximation'],
-                                   minimize_lines=True) -> "LineSegmentChain":
+    def line_segment_approximation(shape, increment_growth=11 / 10, error_cap=None, error_floor=None)\
+            -> "LineSegmentChain":
+        """
+        This method approximates any shape using straight line segments.
+
+        :param shape: The shape to be approximated.
+        :param increment_growth: the scale by which line_segments grow and shrink. Must be > 1.
+        :param error_cap: the maximum acceptable deviation from the curve.
+        :param error_floor: the maximum minimum deviation from the curve before segment length starts growing again.
+        :return: A LineSegmentChain which approximates the given shape.
+        """
+
+        error_cap = TOLERANCES['approximation'] if error_cap is None else error_cap
+        error_floor = (increment_growth - 1) * error_cap if error_floor is None else error_floor
+
+        if error_cap <= 0:
+            raise ValueError(f"This algorithm is approximate. error_cap must be a non-zero positive float. Not {error_cap}")
+
+        if increment_growth <= 1:
+            raise ValueError(f"increment_growth must be > 1. Not {increment_growth}")
 
         lines = LineSegmentChain()
 
@@ -70,7 +58,7 @@ class LineSegmentChain(Chain):
 
         t = 0
         line_start = shape.start
-        increment = 0.1
+        increment = 5
 
         while t < 1:
             new_t = t + increment
@@ -86,11 +74,10 @@ class LineSegmentChain(Chain):
             # If the error is too high, reduce increment and restart cycle
             if distance > error_cap:
                 increment /= increment_growth
-                # print(f"error {distance} is too high, lowering increment")
                 continue
 
             # If the error is very low, increase increment but DO NOT restart cycle.
-            if distance < error_floor and minimize_lines:
+            if distance < error_floor:
                 increment *= increment_growth
 
             lines.append(line)
