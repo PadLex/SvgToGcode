@@ -70,13 +70,13 @@ def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=N
                 curves.extend(path.curves)
 
         # Continue the recursion
-        curves.extend(parse_root(element, canvas_height, transform_origin, draw_hidden, visible, transformation))
+        curves.extend(parse_root(element, transform_origin, canvas_height, draw_hidden, visible, transformation))
 
     # ToDo implement shapes class
     return curves
 
 
-def parse_string(svg_string: str, canvas_height=None, transform_origin=True, draw_hidden=False) -> List[Curve]:
+def parse_string(svg_string: str, transform_origin=True, canvas_height=None, draw_hidden=False) -> List[Curve]:
     """
         Recursively parse an svg string into geometric curves. (Wrapper for parse_root)
 
@@ -92,7 +92,7 @@ def parse_string(svg_string: str, canvas_height=None, transform_origin=True, dra
     return parse_root(root, transform_origin, canvas_height, draw_hidden)
 
 
-def parse_file(file_path: str, canvas_height=None, transform_origin=True, draw_hidden=False) -> List[Curve]:
+def parse_file(file_path: str, transform_origin=True, canvas_height=None, draw_hidden=False) -> List[Curve]:
     """
             Recursively parse an svg file into geometric curves. (Wrapper for parse_root)
 
