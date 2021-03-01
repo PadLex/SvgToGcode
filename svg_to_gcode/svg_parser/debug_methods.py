@@ -38,7 +38,9 @@ def to_svg_path(line_segment_chain: LineSegmentChain, transformation=None, color
     path.set("d", d)
     path.set("style", style)
     if draw_arrows:
-        path.set("marker-mid", "url(#arrow-346)")
+        path.set("marker-end", "url(#Arrow1Lend)")        
+
+    return path
 
     return path
 
