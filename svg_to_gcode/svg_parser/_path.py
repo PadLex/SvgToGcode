@@ -91,10 +91,23 @@ class Path:
             if is_numeric:
                 number_str += character
 
+                # if a negative number follows another number, no delimiter is required.
+                # implicitly stated decimals like .6 don't require a delimiter. In either case we add a delimiter.
+                negatives = not is_final and character != 'e' and d[i + 1] == '-'
+                implicit_decimals = not is_final and d[i + 1] == '.' and '.' in number_str
+                if negatives or implicit_decimals:
+                    d = d[:i+1] + ',' + d[i+1:]
+
             # If the character is a delimiter or a command key or the last character, complete the number and save it
             # as an argument
             if is_delimiter or is_command_key or is_final:
                 if number_str:
+                    # In svg form '-.5' can be written as '-.5'. Python doesn't like that notation.
+                    if number_str[0] == '.':
+                        number_str = '0' + number_str
+                    if number_str[0] == '-' and number_str[1] == '.':
+                        number_str = '-0' + number_str[1:]
+
                     command_arguments.append(float(number_str))
                     number_str = ''
 
