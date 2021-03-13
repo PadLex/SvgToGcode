@@ -26,7 +26,7 @@ class Gcode(Interface):
 
         # Don't do anything if linear move was called without passing a value.
         if x is None and y is None and z is None:
-            warnings.warn("liner_move command invoked without arguments.")
+            warnings.warn("linear_move command invoked without arguments.")
             return ''
 
         # Todo, investigate G0 command and replace movement speeds with G1 (normal speed) and G0 (fast move)
@@ -37,9 +37,9 @@ class Gcode(Interface):
             command += f" F{self._current_speed}"
 
         # Move if not 0 and not None
-        command += f" X{x}" if x is not None else ''
-        command += f" Y{y}" if y is not None else ''
-        command += f" Z{z}" if z is not None else ''
+        command += f" X{x:.14f}" if x is not None else ''
+        command += f" Y{y:.14f}" if y is not None else ''
+        command += f" Z{z:.14f}" if z is not None else ''
 
         if self.position is not None or (x is not None and y is not None):
             if x is None:
@@ -73,6 +73,9 @@ class Gcode(Interface):
 
     def set_absolute_coordinates(self):
         return "G90;"
+
+    def set_relative_coordinates(self):
+        return "G91;"
 
     def set_origin_at_position(self):
         self.position = Vector(0, 0)

@@ -57,9 +57,9 @@ class Compiler:
 
             if i < passes - 1:  # If it isn't the last pass, turn off the laser and move down
                 gcode.append(self.interface.laser_off())
-
-                move_down = self.interface.linear_move(z=-self.pass_depth)
-                gcode.append(move_down)
+                gcode.append(self.interface.set_relative_coordinates())
+                gcode.append(self.interface.linear_move(z=-self.pass_depth))
+                gcode.append(self.interface.set_absolute_coordinates())
 
         gcode.extend(self.footer)
 
