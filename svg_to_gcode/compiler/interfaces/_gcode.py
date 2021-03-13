@@ -14,6 +14,7 @@ class Gcode(Interface):
         self._next_speed = None
         self._current_speed = None
         self._current_power = None
+        self.precision = 8
 
     def set_movement_speed(self, speed):
         self._next_speed = speed
@@ -37,9 +38,9 @@ class Gcode(Interface):
             command += f" F{self._current_speed}"
 
         # Move if not 0 and not None
-        command += f" X{x:.14f}" if x is not None else ''
-        command += f" Y{y:.14f}" if y is not None else ''
-        command += f" Z{z:.14f}" if z is not None else ''
+        command += f" X{x:.{self.precision}f}" if x is not None else ''
+        command += f" Y{y:.{self.precision}f}" if y is not None else ''
+        command += f" Z{z:.{self.precision}f}" if z is not None else ''
 
         if self.position is not None or (x is not None and y is not None):
             if x is None:
