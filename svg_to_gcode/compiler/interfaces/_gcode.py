@@ -1,8 +1,10 @@
 import warnings
+import math
 
 from svg_to_gcode import formulas
 from svg_to_gcode.compiler.interfaces import Interface
 from svg_to_gcode.geometry import Vector
+from svg_to_gcode import TOLERANCES
 
 verbose = False
 
@@ -13,7 +15,9 @@ class Gcode(Interface):
         self.position = None
         self._next_speed = None
         self._current_speed = None
-        self._current_power = None
+
+        # Round outputs to the same number of significant figures as the operational tolerance.
+        self.precision = abs(round(math.log(TOLERANCES["operation"], 10)))
 
     def set_movement_speed(self, speed):
         self._next_speed = speed
@@ -26,7 +30,7 @@ class Gcode(Interface):
 
         # Don't do anything if linear move was called without passing a value.
         if x is None and y is None and z is None:
-            warnings.warn("liner_move command invoked without arguments.")
+            warnings.warn("linear_move command invoked without arguments.")
             return ''
 
         # Todo, investigate G0 command and replace movement speeds with G1 (normal speed) and G0 (fast move)
@@ -37,9 +41,9 @@ class Gcode(Interface):
             command += f" F{self._current_speed}"
 
         # Move if not 0 and not None
-        command += f" X{x}" if x is not None else ''
-        command += f" Y{y}" if y is not None else ''
-        command += f" Z{z}" if z is not None else ''
+        command += f" X{x:.{self.precision}f}" if x is not None else ''
+        command += f" Y{y:.{self.precision}f}" if y is not None else ''
+        command += f" Z{z:.{self.precision}f}" if z is not None else ''
 
         if self.position is not None or (x is not None and y is not None):
             if x is None:
@@ -56,15 +60,9 @@ class Gcode(Interface):
         return command + ';'
 
     def laser_off(self):
-        if self._current_power is None or self._current_power > 0:
-            self._current_power = 0
-            return f"M5;"
-
-        return ''
+        return f"M5;"
 
     def set_laser_power(self, power):
-        self._current_power = power
-
         if power < 0 or power > 1:
             raise ValueError(f"{power} is out of bounds. Laser power must be given between 0 and 1. "
                              f"The interface will scale it correctly.")
@@ -73,6 +71,9 @@ class Gcode(Interface):
 
     def set_absolute_coordinates(self):
         return "G90;"
+
+    def set_relative_coordinates(self):
+        return "G91;"
 
     def set_origin_at_position(self):
         self.position = Vector(0, 0)

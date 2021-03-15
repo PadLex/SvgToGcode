@@ -10,16 +10,10 @@ class CustomInterface(interfaces.Gcode):
 
     # Override the laser_off method such that it also powers off the fan.
     def laser_off(self):
-        if self._current_power is None or self._current_power > 0:
-            self._current_power = 0
-            return "M107;\n" + "M5;"  # Turn off the fan + turn off the laser
-
-        return ''
+        return "M107;\n" + "M5;"  # Turn off the fan + turn off the laser
 
     # Override the set_laser_power method
     def set_laser_power(self, power):
-        self._current_power = power
-
         if power < 0 or power > 1:
             raise ValueError(f"{power} is out of bounds. Laser power must be given between 0 and 1. "
                              f"The interface will scale it correctly.")
