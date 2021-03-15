@@ -4,7 +4,7 @@ import warnings
 from typing import List
 
 from svg_to_gcode.geometry import Vector
-from svg_to_gcode.geometry import Line, EllipticalArc, CubicBazier, QuadraticBezier
+from svg_to_gcode.geometry import Line, EllipticalArc, SVGEllipticalArc, CubicBazier, QuadraticBezier
 from svg_to_gcode.svg_parser import Transformation
 from svg_to_gcode import formulas
 from svg_to_gcode import TOLERANCES
@@ -260,66 +260,38 @@ class Path:
         # Generate EllipticalArc with center notation from svg endpoint notation.
         # Based on w3.org implementation notes. https://www.w3.org/TR/SVG2/implnote.html
         def absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, x, y):
-            start = self.current_point
             end = Vector(x, y)
+            start = self.current_point
 
-            rotation_rad = math.radians(deg_from_horizontal)
-            max_angle = 2 * math.pi
-            rotation_rad = formulas.mod_constrain(rotation_rad, -max_angle, max_angle)
+            radii = Vector(rx, ry)
 
-            # Find and select one of the two possible eclipse centers by undoing the rotation (to simplify the math) and
-            # then re-applying it.
-            rotated_primed_values = (start - end) / 2  # Find the primed_values of the start and the end points.
-            primed_values = formulas.rotate(rotated_primed_values, -rotation_rad, True)  # Undo the ellipse's rotation.
-            px, py = primed_values.x, primed_values.y
+            rotation_rad = -math.radians(deg_from_horizontal)
 
-            # Correct out-of-range radii
-            # ToDo investigate buggy behaviour when sweep angle > 180 deg
-            rx = abs(rx)
-            ry = abs(ry)
-            if rx <= TOLERANCES['operation'] or ry <= TOLERANCES['operation']:
-                return absolute_line(x, y)
+            radii, center, start_angle, sweep_angle = formulas.endpoint_to_center_parameterization_alex(
+                start, end, radii, rotation_rad, large_arc_flag, sweep_flag)
 
-            delta = px**2/rx**2 + py**2/ry**2
+            start_, end_, large_arc_flag_, sweep_flag_ = formulas.center_to_endpoint_parameterization(
+                center, radii, rotation_rad, start_angle, sweep_angle)
 
-            if delta > 1:
-                rx *= math.sqrt(delta)
-                ry *= math.sqrt(delta)
+            print("original (endpoint):", start, end, large_arc_flag, sweep_flag)
+            print("final (endpoint):", start_, end_, large_arc_flag_, sweep_flag_)
+            print("middle (center):", radii, center, start_angle, sweep_angle)
 
-            if math.sqrt(delta) > 1:
-                center = Vector(0, 0)
-            else:
-                radicant = ((rx * ry) ** 2 - (rx * py) ** 2 - (ry * px) ** 2) / ((rx * py) ** 2 + (ry * px) ** 2)
+            center = self._apply_transformations(center)
+            radii = Vector(radii.x, -radii.y)
+            #rotation_rad *= -1
 
-                # Find center using w3.org's formula
-                center = math.sqrt(radicant) * Vector((rx * py) / ry, - (ry * px) / rx)
+            arc = EllipticalArc(center, radii, rotation_rad, start_angle, sweep_angle)
+            print(arc)
 
-                center *= -1 if large_arc_flag == sweep_flag else 1  # Select one of the two solutions based on flags
+            print(arc.point(0.5))
 
-            rotated_center = formulas.rotate(center, rotation_rad, False) + (start + end) / 2  # re-apply the rotation
+            self.current_point = end
+            return arc
 
-            cx, cy = center.x, center.y
-            u = Vector((px - cx) / rx, (py - cy) / ry)
-            v = Vector((-px - cx) / rx, (-py - cy) / ry)
-
-            start_angle = formulas.angle_between_vectors(Vector(1, 0), u)
-            sweep_angle_unbounded = formulas.angle_between_vectors(u, v)
-            sweep_angle = sweep_angle_unbounded % max_angle
-
-            if not sweep_flag and sweep_angle_unbounded > 0:
-                sweep_angle -= max_angle
-
-            if sweep_flag and sweep_angle_unbounded < 0:
-                sweep_angle += max_angle
-
-            transformed_center = self._apply_transformations(rotated_center)
-            sweep_angle *= -1 if self.transform_origin else 1
-            start_angle *= 1 if self.transform_origin else 1
-
-            arc = EllipticalArc(transformed_center, Vector(rx, ry), rotation_rad, start_angle, sweep_angle)
-
+        def absolute_arc_(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, x, y):
+            arc = SVGEllipticalArc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, x, y, self.point_transformation)
             self.current_point = Vector(x, y)
-
             return arc
 
         def relative_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, dx, dy):

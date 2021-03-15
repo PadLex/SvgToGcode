@@ -10,9 +10,9 @@ from testing.comparison_tests import compare_files
 
 
 if __name__ == "__main__":
-    example = "parser_challenge"
-    test_name = "linear_approximation"
-    test_type = ["comparison", "other"][1]
+    example = "test"
+    test_name = "basic_usage"
+    test_type = ["comparison", "other"][0]
 
     if test_type == "comparison":
         run_test = importlib.import_module(f"testing.comparison_tests.{test_name}.test").run_test
@@ -33,7 +33,7 @@ if __name__ == "__main__":
             if compare_files(correct_path, output_path):
                 print("Success, outputs are within operational tolerance")
             else:
-                print("Ups, the outputs are different")
+                print("Oops, the outputs are different")
 
     if test_type == "other":
         svg_file_name = os.path.join("examples", f"{example}.svg")

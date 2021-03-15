@@ -73,34 +73,36 @@
             id="layer1">
 
         <path
-                d="M50 50 A 50 20 0 1 1 150 100"
+                transform="rotate(0)"
+                d="M 150.0 100.0 A 50 50 0.0 1 1 149.99238475781956 99.12737967813582"
                 visibility="visible"
                 style="fill:none;stroke:blue;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
-        <path
-                d="M50 100 A 70 10 -36001 1 1 150 100"
-                visibility="visible"
-                style="fill:none;stroke:red;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
-        <path
-                d="M50 100 A 50 10 180 1 1 150 100 50 50 0 1 1 50 100 "
-                visibility="inherit"
-                style="fill:none;stroke:red;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
-
         <path
                 d="M50 100 A 50 10 95 1 1 50 50"
                 visibility="inherit"
                 style="fill:none;stroke:green;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
+        <circle
+            cx="100"
+            cy="100"
+            r="0.5"
+            visibility="visible"
+            style="fill:red;stroke:red;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
+        <line
+            x1="50"
+            y1="100"
+            x2="100"
+            y2="100"
+            visibility="visible"
+            style="fill:red;stroke:red;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
+        />
+        <line
+            x1="100"
+            y1="150"
+            x2="100"
+            y2="100"
+            visibility="visible"
+            style="fill:red;stroke:purple;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
+        />
 
-
-        <g inkscape:label="Layer 1" inkscape:groupmode="layer" id="layer1" visibility="visible">
-            <path d="m 50,50 a 50,20 0 1 0 100,0"
-                  visibility="inherit"
-                  style="fill:none;stroke:blue;stroke-width:1.26458px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-                  id="path6"/>
-            <path d="m 50,50 a 50,40 90 1 0 100,0"
-                  visibility="inherit"
-                  style="fill:none;stroke:blue;stroke-width:1.26458px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-                  id="path6"/>
-
-        </g>
     </g>
 </svg>
