@@ -51,12 +51,24 @@ class Interface:
         Make the coordinate space absolute. ie. move relative to origin not current position.
 
         return '' if the target of the interface only supports absolute space. If the target only supports
-        relative coordinate space, this command should return '' and the child class must transform_origin all inputs from
-        absolute positions to relative positions.
+        relative coordinate space, this command should return '' and the child class must transform all future inputs from
+        absolute positions to relative positions until set_relative_coordinates is called.
 
         :return: Appropriate command.
         """
-        raise NotImplementedError("Interface class must implement the absolute_coordinates command")
+        raise NotImplementedError("Interface class must implement the set_absolute_coordinates command")
+
+    def set_relative_coordinates(self) -> str:
+        """
+        Make the coordinate space relative. ie. move relative to current position not origin.
+
+        return '' if the target of the interface only supports relative space. If the target only supports
+        absolute coordinate space, this command should return '' and the child class must transform all future inputs from
+        relative positions to absolute positions until set_absolute_coordinates is called.
+
+        :return: Appropriate command.
+        """
+        raise NotImplementedError("Interface class must implement the set_relative_coordinates command")
 
     # Optional commands #
 
@@ -74,7 +86,7 @@ class Interface:
         """
         Optional method, if implemented Specifies the unit of measurement.
 
-        :return: Appropriate command.
+        :return: Appropriate command. If not implemented return ''.
         """
         pass
 
@@ -82,6 +94,6 @@ class Interface:
         """
         Optional method, if implemented homes all axes.
 
-        :return: Appropriate command.
+        :return: Appropriate command. If not implemented return ''.
         """
         pass
