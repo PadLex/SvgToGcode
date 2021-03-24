@@ -13,10 +13,11 @@ class Compiler:
     the resulting numerical control code.
     """
 
-    def __init__(self, interface_class: typing.Type[Interface], movement_speed, cutting_speed, pass_depth,
+    def __init__(self, interface_class: typing.Type[Interface], movement_speed, cutting_speed, pass_depth,movement_height,cutting_height,
                  unit=None, custom_header=None, custom_footer=None):
         self.interface = interface_class()
-
+        self.movement_height = movement_height
+        self.cutting_height = cutting_height
         self.movement_speed = movement_speed
         self.cutting_speed = cutting_speed
         self.pass_depth = pass_depth
@@ -31,6 +32,7 @@ class Compiler:
             custom_footer = [self.interface.laser_off()]
 
         self.header = [self.interface.set_absolute_coordinates(),
+                       self.interface.linear_move(z=self.movement_height),
                        self.interface.set_movement_speed(self.movement_speed)] + custom_header
         self.footer = custom_footer
         self.body = []
@@ -95,8 +97,13 @@ class Compiler:
 
         # Don't turn off laser if the new start is at the current position
         if self.interface.position is None or abs(self.interface.position - start) > TOLERANCES["operation"]:
-            code = [self.interface.laser_off(), self.interface.linear_move(start.x, start.y),
-                    self.interface.set_laser_power(1)]
+            code = [self.interface.laser_off(),
+                    self.interface.linear_move(z=self.movement_height),
+                    self.interface.set_movement_speed( self.movement_speed),
+                    self.interface.linear_move(start.x, start.y),
+                    self.interface.set_movement_speed(self.cutting_speed),
+                    self.interface.set_laser_power(1),
+                    self.interface.linear_move(z=self.cutting_height)]
 
         for line in line_chain:
             code.append(self.interface.linear_move(line.end.x, line.end.y))
