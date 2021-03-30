@@ -37,13 +37,13 @@ class EllipticalArc(Curve):
         angle = formulas.linear_map(self.start_angle, self.end_angle, t)
         return self.angle_to_point(angle)
 
-    def angle_to_point_(self, angle):
+    def angle_to_point(self, angle):
         transformed_radii = Vector(self.radii.x * math.cos(angle), self.radii.y * math.sin(angle))
         point = Matrix([[math.cos(self.rotation), -math.sin(self.rotation)],
                         [math.sin(self.rotation), math.cos(self.rotation)]]) * transformed_radii + self.center
         return point
 
-    def angle_to_point(self, rad):
+    def angle_to_point_(self, rad):
         at_origin = Vector(self.radii.x * math.cos(rad), self.radii.y * math.sin(rad))
         translated = self.center + formulas.rotate(at_origin, self.rotation, False)
         return translated

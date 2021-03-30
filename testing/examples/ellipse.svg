@@ -73,6 +73,13 @@
             id="layer1">
 
         <path
+            transform="rotate(0)"
+         d="m 50,20 a 50,20 10 1 0 100,0"
+         visibility="inherit"
+         fill="none"
+         stroke="blue"/>
+
+        <path
                 d="M50 50 A 50 20 0 1 1 150 100"
                 visibility="visible"
                 style="fill:none;stroke:blue;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>

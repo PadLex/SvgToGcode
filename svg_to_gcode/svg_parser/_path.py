@@ -265,9 +265,20 @@ class Path:
 
             radii = Vector(rx, ry)
 
-            rotation_rad = -math.radians(deg_from_horizontal)
+            rotation_rad = math.radians(deg_from_horizontal)
 
-            radii, center, start_angle, sweep_angle = formulas.endpoint_to_center_parameterization_alex(
+            print("\n\nstart", start, "end", end)
+
+            if abs(start-end) == 0:
+                raise ValueError("")
+
+            """
+            end = self._apply_transformations(end)
+            start = self._apply_transformations(start)
+            radii = Vector(radii.x, -radii.y)
+            """
+
+            radii, center, start_angle, sweep_angle = formulas.endpoint_to_center_parameterization(
                 start, end, radii, rotation_rad, large_arc_flag, sweep_flag)
 
             start_, end_, large_arc_flag_, sweep_flag_ = formulas.center_to_endpoint_parameterization(
@@ -277,14 +288,18 @@ class Path:
             print("final (endpoint):", start_, end_, large_arc_flag_, sweep_flag_)
             print("middle (center):", radii, center, start_angle, sweep_angle)
 
+            #arc_ = EllipticalArc(center, radii, rotation_rad, start_angle, sweep_angle)
+            #print("arc_", arc_.point(0), arc_.point(0.5), arc_.point(1))
+            #print("arc_", arc_)
+
             center = self._apply_transformations(center)
             radii = Vector(radii.x, -radii.y)
-            #rotation_rad *= -1
+            rotation_rad *= -1
 
             arc = EllipticalArc(center, radii, rotation_rad, start_angle, sweep_angle)
-            print(arc)
+            #print(arc)
 
-            print(arc.point(0.5))
+            #print(arc.point(0), arc.point(0.5), arc.point(1))
 
             self.current_point = end
             return arc
@@ -295,7 +310,7 @@ class Path:
             return arc
 
         def relative_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, dx, dy):
-            return absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, self.current_point.x + dx, self.current_point.x + dy)
+            return absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, self.current_point.x + dx, self.current_point.y + dy)
 
         command_methods = {
             # Only move end point
@@ -326,8 +341,12 @@ class Path:
             'A': absolute_arc,
             'a': relative_arc
         }
-
+        curve = command_methods[command_key](*command_arguments)
+        if curve is not None:
+            self.curves.append(curve)
+        """
         try:
+            pass
             curve = command_methods[command_key](*command_arguments)
         except TypeError as type_error:
             raise type_error
@@ -339,6 +358,6 @@ class Path:
         else:
             if curve is not None:
                 self.curves.append(curve)
-
+        """
         if verbose:
             print(f"{command_key}{tuple(command_arguments)} -> {curve}")

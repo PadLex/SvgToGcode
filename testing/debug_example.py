@@ -10,7 +10,7 @@ from testing.comparison_tests import compare_files
 
 
 if __name__ == "__main__":
-    example = "test"
+    example = "ellipse"
     test_name = "basic_usage"
     test_type = ["comparison", "other"][0]
 

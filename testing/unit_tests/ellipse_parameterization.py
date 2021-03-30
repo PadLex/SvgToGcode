@@ -2,7 +2,7 @@ import math
 
 from svg_to_gcode.geometry import Vector
 from svg_to_gcode.formulas import center_to_endpoint_parameterization
-from svg_to_gcode.formulas import endpoint_to_center_parameterization_alex as endpoint_to_center_parameterization
+from svg_to_gcode.formulas import endpoint_to_center_parameterization as endpoint_to_center_parameterization
 
 from svg_to_gcode import TOLERANCES
 
@@ -12,7 +12,7 @@ def to_svg(start, end, radii, rotation, large_arc_flag, sweep_flag):
 
 
 # center parametrization
-arc = "edgee"
+arc = "why_not"
 if arc == "simple":
     center = Vector(100, 100)
     radii = Vector(20, 60)
@@ -25,12 +25,28 @@ elif arc == "edge":
     rotation = 0
     start_angle = 2.366399280279432
     sweep_angle = 4.691979400210515
-else:
-    center = Vector(100.0, 100.0)
-    radii = Vector(50, 50)
+elif arc == "dudler":
+    radii = Vector(50, 10)
+    rotation = math.radians(95)
+    radii, center, start_angle, sweep_angle = endpoint_to_center_parameterization(
+        Vector(50, 100), Vector(50, 50), radii, rotation, 1, 1)
+elif arc == "why":
+    radii = Vector(50, 20)
     rotation = math.radians(0)
+    radii, center, start_angle, sweep_angle = endpoint_to_center_parameterization(
+        Vector(50, 50), Vector(150, 50), radii, rotation, 1, 0)
+elif arc == "why_not":
+    center = Vector(50, 20)
+    radii = Vector(100.0, 50.0)
+    rotation = 0
+    start_angle = -3
+    sweep_angle = 3
+else:
+    center = Vector(100, 100.0)
+    radii = Vector(50, 50)
+    rotation = math.radians(90)
     start_angle = math.radians(0)
-    sweep_angle = math.radians(359)
+    sweep_angle = math.radians(270)
 
 # end-pint parametrization
 start, end, large_arc_flag, sweep_flag = center_to_endpoint_parameterization(center, radii, rotation, start_angle,
