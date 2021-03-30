@@ -73,8 +73,8 @@
             id="layer1">
 
         <path
-            transform="rotate(0)"
-         d="m 50,20 a 50,20 10 1 0 100,0"
+            transform="rotate(70)"
+         d="m 100,4 a 50,20 10 1 0 100,0"
          visibility="inherit"
          fill="none"
          stroke="blue"/>
