@@ -1,3 +1,5 @@
+import math
+
 from svg_to_gcode.geometry import Vector
 
 
@@ -22,8 +24,14 @@ class Matrix:
         self.matrix_list = matrix_list
 
     def __repr__(self):
-        matrix_str = "\n       ".join([str(row) for row in self.matrix_list])
+        matrix_str = "\n       ".join([str(row) for row in self])
         return f"Matrix({matrix_str})"
+
+    def __iter__(self):
+        yield from self.matrix_list
+
+    def __getitem__(self, index: int):
+        return self.matrix_list[index]
 
     def __mul__(self, other):
         if isinstance(other, Vector):
@@ -39,8 +47,8 @@ class Matrix:
             raise ValueError(f"can't multiply matrix with 2D vector. The matrix must have 2 columns, not "
                              f"{self.number_of_columns}")
 
-        x = sum([self.matrix_list[0][k] * other_vector.x for k in range(self.number_of_columns)])
-        y = sum([self.matrix_list[1][k] * other_vector.y for k in range(self.number_of_columns)])
+        x = sum([self[0][k] * other_vector[k] for k in range(self.number_of_columns)])
+        y = sum([self[1][k] * other_vector[k] for k in range(self.number_of_columns)])
 
         return Vector(x, y)
 
@@ -50,7 +58,7 @@ class Matrix:
                              f"second has rows. {self.number_of_columns}!={other_matrix.number_of_rows}")
 
         matrix_list = [[
-                    sum([self.matrix_list[i][k] * other_matrix.matrix_list[k][j] for k in range(self.number_of_columns)])
+                    sum([self[i][k] * other_matrix[k][j] for k in range(self.number_of_columns)])
                 for j in range(other_matrix.number_of_columns)]
             for i in range(self.number_of_rows)]
 
@@ -60,4 +68,15 @@ class Matrix:
 class IdentityMatrix(Matrix):
     def __init__(self, size):
         matrix_list = [[int(i == j) for j in range(size)] for i in range(size)]
+        super().__init__(matrix_list)
+
+
+class RotationMatrix(Matrix):
+    def __init__(self, angle, inverse=False):
+        if not inverse:
+            matrix_list = [[math.cos(angle), -math.sin(angle)],
+                           [math.sin(angle), math.cos(angle)]]
+        else:
+            matrix_list = [[math.cos(angle), math.sin(angle)],
+                           [-math.sin(angle), math.cos(angle)]]
         super().__init__(matrix_list)

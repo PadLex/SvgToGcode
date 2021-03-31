@@ -36,6 +36,9 @@ class Vector:
     def __iter__(self):
         yield from (self.x, self.y)  # ignore your editor, these parentheses are not redundant
 
+    def __getitem__(self, index: int):
+        return (self.x, self.y)[index]
+
     @staticmethod
     def scalar_product(v1: "Vector", n: int):
         return Vector(v1.x * n, v1.y * n)

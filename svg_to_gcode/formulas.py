@@ -1,10 +1,27 @@
 """
 This script contains handy mathematical equations.
-It's used to limit code repetition and abstract complicated formulas.
+It's used to limit code repetition and abstract complicated math functions.
 """
 
 import math
-from svg_to_gcode.geometry import Vector
+from svg_to_gcode.geometry import Vector, RotationMatrix
+from svg_to_gcode import TOLERANCES
+
+
+def tolerance_constrain(value, maximum, minimum, tolerance=TOLERANCES["operation"]):
+    """
+    Constrain a value between if it surpasses a limit and is within operational tolerance of the limit. Else return the
+    value. Useful if you want to correct for flatting point errors but still want to raise an exception if the value is
+    out-of-bounds for a different reason.
+    """
+
+    if value > maximum and value-maximum < tolerance:
+        return maximum
+
+    if value < minimum and minimum-value < tolerance:
+        return minimum
+
+    return value
 
 
 def line_slope(p1, p2):
@@ -58,34 +75,74 @@ def inv_linear_map(min, max, t_p):
 
 def angle_between_vectors(v1, v2):
     """Compute angle between two vectors v1, v2"""
-    angle = math.acos(Vector.dot_product(v1, v2) / (abs(v1) * abs(v2)))
+    cos_angle = Vector.dot_product(v1, v2) / (abs(v1) * abs(v2))
+    cos_angle = tolerance_constrain(cos_angle, 1, -1)
 
-    angle *= -1 if v1.x * v2.y - v1.y * v2.x > 0 else 1
+    angle = math.acos(cos_angle)
+
+    angle *= 1 if v1.x * v2.y - v1.y * v2.x > 0 else -1
 
     return angle
 
 
-def rotate(p, r, inverted=False):
-    """Rotate a point p by r radians. Remember that the y-axis is inverted in the svg standard."""
-    x, y = p
+def center_to_endpoint_parameterization(center, radii, rotation, start_angle, sweep_angle):
+    rotation_matrix = RotationMatrix(rotation)
 
-    if inverted:
-        return Vector(x * math.cos(r) + y * math.sin(r), - x * math.sin(r) + y * math.cos(r))
+    start = rotation_matrix * Vector(radii.x * math.cos(start_angle), radii.y * math.sin(start_angle)) + center
 
-    return Vector(x * math.cos(r) - y * math.sin(r), + x * math.sin(r) + y * math.cos(r))
+    end_angle = start_angle + sweep_angle
+    end = rotation_matrix * Vector(radii.x * math.cos(end_angle), radii.y * math.sin(end_angle)) + center
+
+    large_arc_flag = 1 if abs(sweep_angle) > math.pi else 0
+    sweep_flag = 1 if sweep_angle > 0 else 0
+
+    return start, end, large_arc_flag, sweep_flag
 
 
-def mod_constrain(n, minimum, maximum):
-    """
-    Constrain a value n between a minimum and a maximum value (both inclusive). Out-of-range values are wrapped
-    (like in a clock).
-    """
+def endpoint_to_center_parameterization(start, end, radii, rotation_rad, large_arc_flag, sweep_flag):
+    # Find and select one of the two possible eclipse centers by undoing the rotation (to simplify the math) and
+    # then re-applying it.
+    rotated_primed_values = (start - end) / 2  # Find the primed_values of the start and the end points.
+    primed_values = RotationMatrix(rotation_rad, True) * rotated_primed_values
+    px, py = primed_values.x, primed_values.y
 
-    if n > maximum:
-        return mod_constrain(n - maximum, minimum, maximum)
+    # Correct out-of-range radii
+    rx = abs(radii.x)
+    ry = abs(radii.y)
 
-    if n < minimum:
-        return mod_constrain(n - minimum, minimum, maximum)
+    delta = px ** 2 / rx ** 2 + py ** 2 / ry ** 2
 
-    return n
+    if delta > 1:
+        rx *= math.sqrt(delta)
+        ry *= math.sqrt(delta)
 
+    if math.sqrt(delta) > 1:
+        center = Vector(0, 0)
+    else:
+        radicant = ((rx * ry) ** 2 - (rx * py) ** 2 - (ry * px) ** 2) / ((rx * py) ** 2 + (ry * px) ** 2)
+        radicant = max(0, radicant)
+
+        # Find center using w3.org's formula
+        center = math.sqrt(radicant) * Vector((rx * py) / ry, - (ry * px) / rx)
+
+        center *= -1 if large_arc_flag == sweep_flag else 1  # Select one of the two solutions based on flags
+
+    rotated_center = RotationMatrix(rotation_rad) * center + (start + end) / 2  # re-apply the rotation
+
+    cx, cy = center.x, center.y
+    u = Vector((px - cx) / rx, (py - cy) / ry)
+    v = Vector((-px - cx) / rx, (-py - cy) / ry)
+
+    max_angle = 2 * math.pi
+    
+    start_angle = angle_between_vectors(Vector(1, 0), u)
+    sweep_angle_unbounded = angle_between_vectors(u, v)
+    sweep_angle = sweep_angle_unbounded % max_angle
+
+    if not sweep_flag and sweep_angle > 0:
+        sweep_angle -= max_angle
+
+    if sweep_flag and sweep_angle < 0:
+        sweep_angle += max_angle
+
+    return Vector(rx, ry), rotated_center, start_angle, sweep_angle

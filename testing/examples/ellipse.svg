@@ -73,26 +73,39 @@
             id="layer1">
 
         <path
+            transform="rotate(70)"
+         d="m 100,4 a 50,20 10 1 0 100,0"
+         visibility="inherit"
+         fill="none"
+         stroke="blue"/>
+
+        <path
                 d="M50 50 A 50 20 0 1 1 150 100"
                 visibility="visible"
                 style="fill:none;stroke:blue;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
         <path
-                d="M50 100 A 70 10 0 1 1 150 100"
+                d="M50 100 A 70 10 -36001 1 1 150 100"
                 visibility="visible"
                 style="fill:none;stroke:red;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
         <path
-                d="M50 100 A 50 10 0 1 1 150 100 50 50 0 1 1 50 100 "
-                visibility="hidden"
+                d="M50 100 A 50 10 180 1 1 150 100 50 50 0 1 1 50 100 "
+                visibility="inherit"
                 style="fill:none;stroke:red;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
 
-        <g inkscape:label="Layer 1" inkscape:groupmode="layer" id="layer1">
+        <path
+                d="M50 100 A 50 10 95 1 1 50 50"
+                visibility="inherit"
+                style="fill:none;stroke:green;stroke-width:1.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
+
+
+        <g inkscape:label="Layer 1" inkscape:groupmode="layer" id="layer1" visibility="visible">
             <path d="m 50,50 a 50,20 0 1 0 100,0"
-                  visibility="visible"
-                  style="fill:none;stroke:#0000ff;stroke-width:1.26458px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+                  visibility="inherit"
+                  style="fill:none;stroke:blue;stroke-width:1.26458px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
                   id="path6"/>
-            <path d="m 50,50 a 50,50 0 1 0 100,0"
-                  visibility="visible"
-                  style="fill:none;stroke:#0000ff;stroke-width:1.26458px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+            <path d="m 50,50 a 50,40 90 1 0 100,0"
+                  visibility="inherit"
+                  style="fill:none;stroke:blue;stroke-width:1.26458px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
                   id="path6"/>
 
         </g>

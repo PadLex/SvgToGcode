@@ -7,7 +7,6 @@ from svg_to_gcode.geometry import Vector
 from svg_to_gcode.geometry import Line, EllipticalArc, CubicBazier, QuadraticBezier
 from svg_to_gcode.svg_parser import Transformation
 from svg_to_gcode import formulas
-from svg_to_gcode import TOLERANCES
 
 verbose = False
 
@@ -44,7 +43,6 @@ class Path:
         try:
             self._parse_commands(d)
         except Exception as generic_exception:
-            raise generic_exception
             warnings.warn(f"Terminating path. The following unforeseen exception occurred: {generic_exception}")
 
     def __repr__(self):
@@ -91,10 +89,23 @@ class Path:
             if is_numeric:
                 number_str += character
 
+                # if a negative number follows another number, no delimiter is required.
+                # implicitly stated decimals like .6 don't require a delimiter. In either case we add a delimiter.
+                negatives = not is_final and character != 'e' and d[i + 1] == '-'
+                implicit_decimals = not is_final and d[i + 1] == '.' and '.' in number_str
+                if negatives or implicit_decimals:
+                    d = d[:i+1] + ',' + d[i+1:]
+
             # If the character is a delimiter or a command key or the last character, complete the number and save it
             # as an argument
             if is_delimiter or is_command_key or is_final:
                 if number_str:
+                    # In svg form '-.5' can be written as '-.5'. Python doesn't like that notation.
+                    if number_str[0] == '.':
+                        number_str = '0' + number_str
+                    if number_str[0] == '-' and number_str[1] == '.':
+                        number_str = '-0' + number_str[1:]
+
                     command_arguments.append(float(number_str))
                     number_str = ''
 
@@ -246,71 +257,32 @@ class Path:
 
         # Generate EllipticalArc with center notation from svg endpoint notation.
         # Based on w3.org implementation notes. https://www.w3.org/TR/SVG2/implnote.html
+        # Todo transformations aren't applied correctly to elliptical arcs
         def absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, x, y):
-            start = self.current_point
             end = Vector(x, y)
+            start = self.current_point
+
+            radii = Vector(rx, ry)
 
             rotation_rad = math.radians(deg_from_horizontal)
-            max_angle = 2 * math.pi
-            rotation_rad = formulas.mod_constrain(rotation_rad, -max_angle, max_angle)
 
-            # Find and select one of the two possible eclipse centers by undoing the rotation (to simplify the math) and
-            # then re-applying it.
-            rotated_primed_values = (start - end) / 2  # Find the primed_values of the start and the end points.
-            primed_values = formulas.rotate(rotated_primed_values, -rotation_rad, True)  # Undo the ellipse's rotation.
-            px, py = primed_values.x, primed_values.y
+            if abs(start-end) == 0:
+                raise ValueError("start and end points can't be equal")
 
-            # Correct out-of-range radii
-            # ToDo investigate buggy behaviour when sweep angle > 180 deg
-            rx = abs(rx)
-            ry = abs(ry)
-            if rx <= TOLERANCES['operation'] or ry <= TOLERANCES['operation']:
-                return absolute_line(x, y)
+            radii, center, start_angle, sweep_angle = formulas.endpoint_to_center_parameterization(
+                start, end, radii, rotation_rad, large_arc_flag, sweep_flag)
 
-            delta = px**2/rx**2 + py**2/ry**2
+            center = self._apply_transformations(center)
+            radii = Vector(radii.x, -radii.y)
+            rotation_rad *= -1
 
-            if delta > 1:
-                rx *= math.sqrt(delta)
-                ry *= math.sqrt(delta)
+            arc = EllipticalArc(center, radii, rotation_rad, start_angle, sweep_angle)
 
-            if math.sqrt(delta) > 1:
-                center = Vector(0, 0)
-            else:
-                radicant = ((rx * ry) ** 2 - (rx * py) ** 2 - (ry * px) ** 2) / ((rx * py) ** 2 + (ry * px) ** 2)
-
-                # Find center using w3.org's formula
-                center = math.sqrt(radicant) * Vector((rx * py) / ry, - (ry * px) / rx)
-
-                center *= -1 if large_arc_flag == sweep_flag else 1  # Select one of the two solutions based on flags
-
-            rotated_center = formulas.rotate(center, rotation_rad, False) + (start + end) / 2  # re-apply the rotation
-
-            cx, cy = center.x, center.y
-            u = Vector((px - cx) / rx, (py - cy) / ry)
-            v = Vector((-px - cx) / rx, (-py - cy) / ry)
-
-            start_angle = formulas.angle_between_vectors(Vector(1, 0), u)
-            sweep_angle_unbounded = formulas.angle_between_vectors(u, v)
-            sweep_angle = sweep_angle_unbounded % max_angle
-
-            if not sweep_flag and sweep_angle_unbounded > 0:
-                sweep_angle -= max_angle
-
-            if sweep_flag and sweep_angle_unbounded < 0:
-                sweep_angle += max_angle
-
-            transformed_center = self._apply_transformations(rotated_center)
-            sweep_angle *= -1 if self.transform_origin else 1
-            start_angle *= 1 if self.transform_origin else 1
-
-            arc = EllipticalArc(transformed_center, Vector(rx, ry), rotation_rad, start_angle, sweep_angle)
-
-            self.current_point = Vector(x, y)
-
+            self.current_point = end
             return arc
 
         def relative_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, dx, dy):
-            return absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, self.current_point.x + dx, self.current_point.x + dy)
+            return absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, self.current_point.x + dx, self.current_point.y + dy)
 
         command_methods = {
             # Only move end point
@@ -345,7 +317,6 @@ class Path:
         try:
             curve = command_methods[command_key](*command_arguments)
         except TypeError as type_error:
-            raise type_error
             warnings.warn(f"Mis-formed input. Skipping command {command_key, command_arguments} because it caused the "
                           f"following error: \n{type_error}")
         except ValueError as value_error:

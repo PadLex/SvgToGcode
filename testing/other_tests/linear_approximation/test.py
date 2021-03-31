@@ -54,20 +54,10 @@ def generate_debug(approximations, svg_file_name, debug_file_name):
     change_origin.add_scale(1, -1)
     change_origin.add_translation(0, -canvas_height)
 
-    defs = debug_methods.arrow_defs()
-    group.append(defs)
+    group.append(debug_methods.arrow_defs())
     for approximation in approximations:
         path = debug_methods.to_svg_path(approximation, color="red", stroke_width=f"{TOLERANCES['approximation']/2}mm",
                                          transformation=change_origin, draw_arrows=True)
-
-        """
-        path = Element("{%s}path" % name_space)
-        path.set("d", )
-        add_def = False
-        path.set("fill", "none")
-        """
-
-
         group.append(path)
 
     root.append(group)
