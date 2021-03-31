@@ -1,3 +1,5 @@
+import math
+
 from svg_to_gcode.geometry import Vector
 
 
@@ -66,4 +68,15 @@ class Matrix:
 class IdentityMatrix(Matrix):
     def __init__(self, size):
         matrix_list = [[int(i == j) for j in range(size)] for i in range(size)]
+        super().__init__(matrix_list)
+
+
+class RotationMatrix(Matrix):
+    def __init__(self, angle, inverse=False):
+        if not inverse:
+            matrix_list = [[math.cos(angle), -math.sin(angle)],
+                           [math.sin(angle), math.cos(angle)]]
+        else:
+            matrix_list = [[math.cos(angle), math.sin(angle)],
+                           [-math.sin(angle), math.cos(angle)]]
         super().__init__(matrix_list)

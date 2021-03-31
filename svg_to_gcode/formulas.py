@@ -1,10 +1,10 @@
 """
 This script contains handy mathematical equations.
-It's used to limit code repetition and abstract complicated 
+It's used to limit code repetition and abstract complicated math functions.
 """
 
 import math
-from svg_to_gcode.geometry import Vector, Matrix
+from svg_to_gcode.geometry import Vector, RotationMatrix
 from svg_to_gcode import TOLERANCES
 
 
@@ -85,31 +85,10 @@ def angle_between_vectors(v1, v2):
     return angle
 
 
-def rotate(p, r, inverted=False):
-    """Rotate a point p by r radians. Remember that the y-axis is inverted in the svg standard."""
-    x, y = p
-
-    if inverted:
-        return Vector(x * math.cos(r) + y * math.sin(r), - x * math.sin(r) + y * math.cos(r))
-
-    return Vector(x * math.cos(r) - y * math.sin(r), + x * math.sin(r) + y * math.cos(r))
-
-
 def center_to_endpoint_parameterization(center, radii, rotation, start_angle, sweep_angle):
-    #print(center, radii, rotation, start_angle, sweep_angle)
-    rotation_matrix = Matrix([[math.cos(rotation), -math.sin(rotation)],
-                              [math.sin(rotation), math.cos(rotation)]])
-    #rotation_matrix = Matrix([[math.cos(rotation), math.sin(rotation)],
-    #                          [-math.sin(rotation), math.cos(rotation)]])
-
-    #print("rot", rotation_matrix)
-    #print("rad", Vector(radii.x * math.cos(start_angle), radii.y * math.sin(start_angle)))
-    #print("rot", rotation_matrix * Vector(radii.x * math.cos(start_angle), radii.y * math.sin(start_angle)))
-    #print("sum", rotation_matrix * Vector(radii.x * math.cos(start_angle), radii.y * math.sin(start_angle)) + center)
+    rotation_matrix = RotationMatrix(rotation)
 
     start = rotation_matrix * Vector(radii.x * math.cos(start_angle), radii.y * math.sin(start_angle)) + center
-
-    #print("start:", start)
 
     end_angle = start_angle + sweep_angle
     end = rotation_matrix * Vector(radii.x * math.cos(end_angle), radii.y * math.sin(end_angle)) + center
@@ -124,9 +103,7 @@ def endpoint_to_center_parameterization(start, end, radii, rotation_rad, large_a
     # Find and select one of the two possible eclipse centers by undoing the rotation (to simplify the math) and
     # then re-applying it.
     rotated_primed_values = (start - end) / 2  # Find the primed_values of the start and the end points.
-    #primed_values = rotate(rotated_primed_values, -rotation_rad, True)  # Undo the ellipse's rotation.
-    primed_values = Matrix([[math.cos(rotation_rad), math.sin(rotation_rad)],
-                            [-math.sin(rotation_rad), math.cos(rotation_rad)]]) * rotated_primed_values
+    primed_values = RotationMatrix(rotation_rad, True) * rotated_primed_values
     px, py = primed_values.x, primed_values.y
 
     # Correct out-of-range radii
@@ -150,9 +127,7 @@ def endpoint_to_center_parameterization(start, end, radii, rotation_rad, large_a
 
         center *= -1 if large_arc_flag == sweep_flag else 1  # Select one of the two solutions based on flags
 
-    rotated_center = rotate(center, rotation_rad, False) + (start + end) / 2  # re-apply the rotation
-
-    #print("center", center, "rotated", rotate(center, rotation_rad, False), "translated", rotated_center)
+    rotated_center = RotationMatrix(rotation_rad) * center + (start + end) / 2  # re-apply the rotation
 
     cx, cy = center.x, center.y
     u = Vector((px - cx) / rx, (py - cy) / ry)
@@ -164,15 +139,10 @@ def endpoint_to_center_parameterization(start, end, radii, rotation_rad, large_a
     sweep_angle_unbounded = angle_between_vectors(u, v)
     sweep_angle = sweep_angle_unbounded % max_angle
 
-    #"""
     if not sweep_flag and sweep_angle > 0:
         sweep_angle -= max_angle
 
     if sweep_flag and sweep_angle < 0:
         sweep_angle += max_angle
-    #"""
-
-    print("delta:", delta, "sqrt(delta):", math.sqrt(delta), "radii:", Vector(rx, ry), "center", rotated_center, "start_angle", math.degrees(start_angle),
-          "sweep_angle", math.degrees(sweep_angle), "u:", u, "v:", v)
 
     return Vector(rx, ry), rotated_center, start_angle, sweep_angle

@@ -4,10 +4,9 @@ import warnings
 from typing import List
 
 from svg_to_gcode.geometry import Vector
-from svg_to_gcode.geometry import Line, EllipticalArc, SVGEllipticalArc, CubicBazier, QuadraticBezier
+from svg_to_gcode.geometry import Line, EllipticalArc, CubicBazier, QuadraticBezier
 from svg_to_gcode.svg_parser import Transformation
 from svg_to_gcode import formulas
-from svg_to_gcode import TOLERANCES
 
 verbose = False
 
@@ -44,7 +43,6 @@ class Path:
         try:
             self._parse_commands(d)
         except Exception as generic_exception:
-            raise generic_exception
             warnings.warn(f"Terminating path. The following unforeseen exception occurred: {generic_exception}")
 
     def __repr__(self):
@@ -259,6 +257,7 @@ class Path:
 
         # Generate EllipticalArc with center notation from svg endpoint notation.
         # Based on w3.org implementation notes. https://www.w3.org/TR/SVG2/implnote.html
+        # Todo transformations aren't applied correctly to elliptical arcs
         def absolute_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, x, y):
             end = Vector(x, y)
             start = self.current_point
@@ -267,46 +266,19 @@ class Path:
 
             rotation_rad = math.radians(deg_from_horizontal)
 
-            print("\n\nstart", start, "end", end)
-
             if abs(start-end) == 0:
-                raise ValueError("")
-
-            """
-            end = self._apply_transformations(end)
-            start = self._apply_transformations(start)
-            radii = Vector(radii.x, -radii.y)
-            """
+                raise ValueError("start and end points can't be equal")
 
             radii, center, start_angle, sweep_angle = formulas.endpoint_to_center_parameterization(
                 start, end, radii, rotation_rad, large_arc_flag, sweep_flag)
-
-            start_, end_, large_arc_flag_, sweep_flag_ = formulas.center_to_endpoint_parameterization(
-                center, radii, rotation_rad, start_angle, sweep_angle)
-
-            print("original (endpoint):", start, end, large_arc_flag, sweep_flag)
-            print("final (endpoint):", start_, end_, large_arc_flag_, sweep_flag_)
-            print("middle (center):", radii, center, start_angle, sweep_angle)
-
-            #arc_ = EllipticalArc(center, radii, rotation_rad, start_angle, sweep_angle)
-            #print("arc_", arc_.point(0), arc_.point(0.5), arc_.point(1))
-            #print("arc_", arc_)
 
             center = self._apply_transformations(center)
             radii = Vector(radii.x, -radii.y)
             rotation_rad *= -1
 
             arc = EllipticalArc(center, radii, rotation_rad, start_angle, sweep_angle)
-            #print(arc)
-
-            #print(arc.point(0), arc.point(0.5), arc.point(1))
 
             self.current_point = end
-            return arc
-
-        def absolute_arc_(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, x, y):
-            arc = SVGEllipticalArc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, x, y, self.point_transformation)
-            self.current_point = Vector(x, y)
             return arc
 
         def relative_arc(rx, ry, deg_from_horizontal, large_arc_flag, sweep_flag, dx, dy):
@@ -341,15 +313,10 @@ class Path:
             'A': absolute_arc,
             'a': relative_arc
         }
-        curve = command_methods[command_key](*command_arguments)
-        if curve is not None:
-            self.curves.append(curve)
-        """
+
         try:
-            pass
             curve = command_methods[command_key](*command_arguments)
         except TypeError as type_error:
-            raise type_error
             warnings.warn(f"Mis-formed input. Skipping command {command_key, command_arguments} because it caused the "
                           f"following error: \n{type_error}")
         except ValueError as value_error:
@@ -358,6 +325,6 @@ class Path:
         else:
             if curve is not None:
                 self.curves.append(curve)
-        """
+
         if verbose:
             print(f"{command_key}{tuple(command_arguments)} -> {curve}")
