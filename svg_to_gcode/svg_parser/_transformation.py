@@ -11,7 +11,9 @@ class Transformation:
     __slots__ = "translation_matrix", "transformation_record", "command_methods"
 
     def __init__(self):
-        self.translation_matrix = IdentityMatrix(4)  # Fancy matrix used for translations and linear transformations
+        # Fancy matrix used for affine transformations (translations and linear transformations)
+        self.translation_matrix = IdentityMatrix(4)
+
         self.transformation_record = []
 
         self.command_methods = {
@@ -125,8 +127,29 @@ class Transformation:
         self.translation_matrix *= other.translation_matrix
         self.transformation_record.extend(other.transformation_record)
 
-    def apply_transformation(self, point: Vector) -> Vector:
-        point_4d = Matrix([[point.x], [point.y], [1], [1]])
-        point_4d = self.translation_matrix * point_4d
+    def apply_affine_transformation(self, vector: Vector) -> Vector:
+        """
+        Apply the full affine transformation (linear + translation) to a vector. Generally used to transform points.
+        Eg the center of an ellipse.
+        """
+        vector_4d = Matrix([[vector.x], [vector.y], [1], [1]])
+        vector_4d = self.translation_matrix * vector_4d
 
-        return Vector(point_4d.matrix_list[0][0], point_4d.matrix_list[1][0])
+        return Vector(vector_4d.matrix_list[0][0], vector_4d.matrix_list[1][0])
+
+    def apply_linear_transformation(self, vector: Vector) -> Vector:
+        """
+        Apply the linear component of the affine transformation (no translation) to a vector.
+        Generally used to transform vector properties. Eg the radii of an ellipse.
+        """
+        a = self.translation_matrix[0][0]
+        b = self.translation_matrix[1][0]
+        c = self.translation_matrix[0][1]
+        d = self.translation_matrix[1][1]
+
+        linear_transformation = Matrix([
+            [a, c],
+            [b, d]
+        ])
+
+        return linear_transformation * vector

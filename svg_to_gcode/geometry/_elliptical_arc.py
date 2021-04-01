@@ -8,9 +8,12 @@ from svg_to_gcode.geometry import Curve
 class EllipticalArc(Curve):
     """The EllipticalArc class inherits from the abstract Curve class and describes an elliptical arc."""
 
-    __slots__ = 'center', 'radii', 'rotation', 'start_angle', 'sweep_angle', 'end_angle'
+    __slots__ = 'center', 'radii', 'rotation', 'start_angle', 'sweep_angle', 'end_angle', 'transformation'
 
-    def __init__(self, center: Vector, radii: Vector, rotation: float, start_angle: float, sweep_angle: float):
+    # ToDo apply transformation beforehand (in Path) for consistency with other geometric objects. If you (the reader)
+    #  know how to easily apply an affine transformation to an ellipse feel free to make a pull request.
+    def __init__(self, center: Vector, radii: Vector, rotation: float, start_angle: float, sweep_angle: float,
+                 transformation: None):
 
         # Assign and verify arguments
         self.center = center
@@ -18,6 +21,7 @@ class EllipticalArc(Curve):
         self.rotation = rotation
         self.start_angle = start_angle
         self.sweep_angle = sweep_angle
+        self.transformation = transformation
 
         # Calculate missing data
         self.end_angle = start_angle + sweep_angle
@@ -37,6 +41,10 @@ class EllipticalArc(Curve):
     def angle_to_point(self, angle):
         transformed_radii = Vector(self.radii.x * math.cos(angle), self.radii.y * math.sin(angle))
         point = RotationMatrix(self.rotation) * transformed_radii + self.center
+
+        if self.transformation:
+            point = self.transformation.apply_affine_transformation(point)
+
         return point
 
     def derivative(self, t):

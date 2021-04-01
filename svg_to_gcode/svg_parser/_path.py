@@ -18,7 +18,7 @@ class Path:
                        'Q': 4, 'q': 4, 'S': 4, 's': 4, 'T': 2, 't': 2, 'A': 7, 'a': 7}
 
     __slots__ = "curves", "initial_point", "current_point", "last_control", "canvas_height", "draw_move", \
-                "transform_origin", "point_transformation"
+                "transform_origin", "transformation"
 
     def __init__(self, d: str, canvas_height: float, transform_origin=True, transformation=None):
         self.canvas_height = canvas_height
@@ -29,16 +29,14 @@ class Path:
         self.current_point = Vector(0, 0)
         self.last_control = None  # type: Vector
 
-        point_transformation = Transformation()
+        self.transformation = Transformation()
 
         if self.transform_origin:
-            point_transformation.add_translation(0, canvas_height)
-            point_transformation.add_scale(1, -1)
+            self.transformation.add_translation(0, canvas_height)
+            self.transformation.add_scale(1, -1)
 
         if transformation is not None:
-            point_transformation.extend(transformation)
-
-        self.point_transformation = point_transformation
+            self.transformation.extend(transformation)
 
         try:
             self._parse_commands(d)
@@ -125,7 +123,7 @@ class Path:
             i += 1
 
     def _apply_transformations(self, point: Vector):
-        return self.point_transformation.apply_transformation(point)
+        return self.transformation.apply_affine_transformation(point)
 
     def _add_svg_curve(self, command_key: str, command_arguments: List[float]):
         """
@@ -272,11 +270,7 @@ class Path:
             radii, center, start_angle, sweep_angle = formulas.endpoint_to_center_parameterization(
                 start, end, radii, rotation_rad, large_arc_flag, sweep_flag)
 
-            center = self._apply_transformations(center)
-            radii = Vector(radii.x, -radii.y)
-            rotation_rad *= -1
-
-            arc = EllipticalArc(center, radii, rotation_rad, start_angle, sweep_angle)
+            arc = EllipticalArc(center, radii, rotation_rad, start_angle, sweep_angle, transformation=self.transformation)
 
             self.current_point = end
             return arc

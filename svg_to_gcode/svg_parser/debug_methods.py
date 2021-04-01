@@ -21,14 +21,14 @@ def to_svg_path(line_segment_chain: LineSegmentChain, transformation=None, color
 
     start = Vector(line_segment_chain.get(0).start.x, line_segment_chain.get(0).start.y)
     if transformation:
-        start = transformation.apply_transformation(start)
+        start = transformation.apply_affine_transformation(start)
 
     d = f"M{start.x} {start.y}"
 
     for line in line_segment_chain:
         end = Vector(line.end.x, line.end.y)
         if transformation:
-            end = transformation.apply_transformation(end)
+            end = transformation.apply_affine_transformation(end)
         d += f" L {end.x} {end.y}"
 
     style = f"fill:none;stroke:{color};stroke-width:{stroke_width};stroke-linecap:butt;stroke-linejoin:miter;stroke" \
