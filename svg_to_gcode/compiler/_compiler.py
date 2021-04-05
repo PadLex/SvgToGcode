@@ -57,9 +57,11 @@ class Compiler:
 
             if i < passes - 1:  # If it isn't the last pass, turn off the laser and move down
                 gcode.append(self.interface.laser_off())
-                gcode.append(self.interface.set_relative_coordinates())
-                gcode.append(self.interface.linear_move(z=-self.pass_depth))
-                gcode.append(self.interface.set_absolute_coordinates())
+
+                if self.pass_depth > 0:
+                    gcode.append(self.interface.set_relative_coordinates())
+                    gcode.append(self.interface.linear_move(z=-self.pass_depth))
+                    gcode.append(self.interface.set_absolute_coordinates())
 
         gcode.extend(self.footer)
 
@@ -95,7 +97,9 @@ class Compiler:
 
         # Don't turn off laser if the new start is at the current position
         if self.interface.position is None or abs(self.interface.position - start) > TOLERANCES["operation"]:
-            code = [self.interface.laser_off(), self.interface.linear_move(start.x, start.y),
+
+            code = [self.interface.laser_off(), self.interface.set_movement_speed(self.movement_speed),
+                    self.interface.linear_move(start.x, start.y), self.interface.set_movement_speed(self.cutting_speed),
                     self.interface.set_laser_power(1)]
 
         for line in line_chain:
