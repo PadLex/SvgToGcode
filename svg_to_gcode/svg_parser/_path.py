@@ -122,9 +122,6 @@ class Path:
 
             i += 1
 
-    def _apply_transformations(self, point: Vector):
-        return self.transformation.apply_affine_transformation(point)
-
     def _add_svg_curve(self, command_key: str, command_arguments: List[float]):
         """
         Offer a representation of a curve using the geometry sub-module.
@@ -157,7 +154,8 @@ class Path:
             start = self.current_point
             end = Vector(x, y)
 
-            line = Line(self._apply_transformations(start), self._apply_transformations(end))
+            line = Line(self.transformation.apply_affine_transformation(start),
+                        self.transformation.apply_affine_transformation(end))
 
             self.current_point = end
 
@@ -184,10 +182,10 @@ class Path:
         # Draw curvy curves
         def absolute_cubic_bazier(control1_x, control1_y, control2_x, control2_y, x, y):
 
-            trans_start = self._apply_transformations(self.current_point)
-            trans_end = self._apply_transformations(Vector(x, y))
-            trans_control1 = self._apply_transformations(Vector(control1_x, control1_y))
-            trans_control2 = self._apply_transformations(Vector(control2_x, control2_y))
+            trans_start = self.transformation.apply_affine_transformation(self.current_point)
+            trans_end = self.transformation.apply_affine_transformation(Vector(x, y))
+            trans_control1 = self.transformation.apply_affine_transformation(Vector(control1_x, control1_y))
+            trans_control2 = self.transformation.apply_affine_transformation(Vector(control2_x, control2_y))
 
             cubic_bezier = CubicBazier(trans_start, trans_end, trans_control1, trans_control2)
 
@@ -222,9 +220,9 @@ class Path:
 
         def absolute_quadratic_bazier(control1_x, control1_y, x, y):
 
-            trans_end = self._apply_transformations(self.current_point)
-            trans_new_end = self._apply_transformations(Vector(x, y))
-            trans_control1 = self._apply_transformations(Vector(control1_x, control1_y))
+            trans_end = self.transformation.apply_affine_transformation(self.current_point)
+            trans_new_end = self.transformation.apply_affine_transformation(Vector(x, y))
+            trans_control1 = self.transformation.apply_affine_transformation(Vector(control1_x, control1_y))
 
             quadratic_bezier = QuadraticBezier(trans_end, trans_new_end, trans_control1)
 
@@ -320,5 +318,5 @@ class Path:
             if curve is not None:
                 self.curves.append(curve)
 
-        if verbose:
-            print(f"{command_key}{tuple(command_arguments)} -> {curve}")
+            if verbose:
+                print(f"{command_key}{tuple(command_arguments)} -> {curve}")
