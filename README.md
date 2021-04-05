@@ -65,21 +65,15 @@ class CustomInterface(interfaces.Gcode):
     
     # Override the laser_off method such that it also powers off the fan.
     def laser_off(self):
-        if self._current_power is None or self._current_power > 0:
-            self._current_power = 0
-            return "M107;\n" + "M5;" # Turn off the fan + turn off the laser
+        return "M107;\n" + "M5;"  # Turn off the fan + turn off the laser
 
-        return ''
-    
     # Override the set_laser_power method
     def set_laser_power(self, power):
-        self._current_power = power
-
         if power < 0 or power > 1:
             raise ValueError(f"{power} is out of bounds. Laser power must be given between 0 and 1. "
                              f"The interface will scale it correctly.")
 
-        return f"M106 S255\n" + f"M3 S{linear_map(0, 255, power)};" # Turn on the fan + change laser power
+        return f"M106 S255\n" + f"M3 S{linear_map(0, 255, power)};"  # Turn on the fan + change laser power
 
 # Instantiate a compiler, specifying the custom interface and the speed at which the tool should move.
 gcode_compiler = Compiler(CustomInterface, movement_speed=1000, cutting_speed=300, pass_depth=5)

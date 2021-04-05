@@ -71,6 +71,13 @@ class Interface:
         raise NotImplementedError("Interface class must implement the set_relative_coordinates command")
 
     # Optional commands #
+    def dwell(self, milliseconds) -> str:
+        """
+        Optional method, if implemented dwells for a determined number of milliseconds before moving to the next command.
+
+        :return: Appropriate command.
+        """
+        pass
 
     def set_origin_at_position(self) -> str:
         """

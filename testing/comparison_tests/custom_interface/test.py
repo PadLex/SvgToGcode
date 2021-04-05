@@ -23,7 +23,7 @@ class CustomInterface(interfaces.Gcode):
 
 def run_test(svg_string):
 
-    gcode_compiler = Compiler(CustomInterface, 1000, 300, 0)
+    gcode_compiler = Compiler(CustomInterface, 1000, 300, 0, dwell_time=400)
 
     curves = parse_string(svg_string)
     gcode_compiler.append_curves(curves)

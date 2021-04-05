@@ -75,6 +75,9 @@ class Gcode(Interface):
     def set_relative_coordinates(self):
         return "G91;"
 
+    def dwell(self, milliseconds):
+        return f"G4 P{milliseconds}"
+
     def set_origin_at_position(self):
         self.position = Vector(0, 0)
         return "G92 X0 Y0 Z0;"

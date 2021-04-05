@@ -14,12 +14,23 @@ class Compiler:
     """
 
     def __init__(self, interface_class: typing.Type[Interface], movement_speed, cutting_speed, pass_depth,
-                 unit=None, custom_header=None, custom_footer=None):
-        self.interface = interface_class()
+                 dwell_time=0, unit=None, custom_header=None, custom_footer=None):
+        """
 
+        :param interface_class: Specify which interface to use. The ost common is the gcode interface.
+        :param movement_speed: the speed at which to move the tool when moving. (units are determined by the printer)
+        :param cutting_speed: the speed at which to move the tool when cutting. (units are determined by the printer)
+        :param pass_depth: . AKA, the depth your laser cuts in a pass.
+        :param dwell_time: the number of ms the tool should wait before moving to another cut. Useful for pen plotters.
+        :param unit: specify a unit to the machine
+        :param custom_header: A list of commands to be executed before all generated commands. Default is [laser_off,]
+        :param custom_footer: A list of commands to be executed after all generated commands. Default is [laser_off,]
+        """
+        self.interface = interface_class()
         self.movement_speed = movement_speed
         self.cutting_speed = cutting_speed
-        self.pass_depth = pass_depth
+        self.pass_depth = abs(pass_depth)
+        self.dwell_time = dwell_time
 
         if (unit is not None) and (unit not in UNITS):
             raise ValueError(f"Unknown unit {unit}. Please specify one of the following: {UNITS}")
@@ -95,12 +106,15 @@ class Compiler:
 
         start = line_chain.get(0).start
 
-        # Don't turn off laser if the new start is at the current position
+        # Don't dwell and turn off laser if the new start is at the current position
         if self.interface.position is None or abs(self.interface.position - start) > TOLERANCES["operation"]:
 
             code = [self.interface.laser_off(), self.interface.set_movement_speed(self.movement_speed),
                     self.interface.linear_move(start.x, start.y), self.interface.set_movement_speed(self.cutting_speed),
                     self.interface.set_laser_power(1)]
+
+            if self.dwell_time > 0:
+                code = [self.interface.dwell(self.dwell_time)] + code
 
         for line in line_chain:
             code.append(self.interface.linear_move(line.end.x, line.end.y))
