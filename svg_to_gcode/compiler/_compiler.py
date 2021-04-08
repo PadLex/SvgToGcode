@@ -34,6 +34,8 @@ class Compiler:
 
         if (unit is not None) and (unit not in UNITS):
             raise ValueError(f"Unknown unit {unit}. Please specify one of the following: {UNITS}")
+        
+        self.unit = unit
 
         if custom_header is None:
             custom_header = [self.interface.laser_off()]
@@ -63,6 +65,7 @@ class Compiler:
         gcode = []
 
         gcode.extend(self.header)
+        gcode.append(self.interface.set_unit(self.unit))
         for i in range(passes):
             gcode.extend(self.body)
 
