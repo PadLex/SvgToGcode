@@ -61,10 +61,8 @@ def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=N
         # Override inherited visibility
         visible = visible or (_has_style(element, "visibility", "visible"))
 
-        transparent = _has_style(element, "opacity", "0")
-
         # If the current element is opaque and visible, draw it
-        if draw_hidden or (visible and not transparent):
+        if draw_hidden or visible:
             if element.tag == "{%s}path" % NAMESPACES["svg"]:
                 path = Path(element.attrib['d'], canvas_height, transform_origin, transformation)
                 curves.extend(path.curves)
