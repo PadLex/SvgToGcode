@@ -70,7 +70,7 @@ def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=N
                     scale_x = scale_y
                 else:
                     scale_y = scale_x
-            if align != "none" and meet_or_slice == "sice":
+            if align != "none" and meet_or_slice == "slice":
                 if scale_x < scale_y:
                     scale_x = scale_y
                 else:
