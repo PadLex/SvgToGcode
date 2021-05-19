@@ -17,10 +17,10 @@ class Compiler:
                  dwell_time=0, unit=None, custom_header=None, custom_footer=None):
         """
 
-        :param interface_class: Specify which interface to use. The ost common is the gcode interface.
+        :param interface_class: Specify which interface to use. The most common is the gcode interface.
         :param movement_speed: the speed at which to move the tool when moving. (units are determined by the printer)
         :param cutting_speed: the speed at which to move the tool when cutting. (units are determined by the printer)
-        :param pass_depth: . AKA, the depth your laser cuts in a pass.
+        :param pass_depth: AKA, the depth your laser cuts in a pass.
         :param dwell_time: the number of ms the tool should wait before moving to another cut. Useful for pen plotters.
         :param unit: specify a unit to the machine
         :param custom_header: A list of commands to be executed before all generated commands. Default is [laser_off,]
