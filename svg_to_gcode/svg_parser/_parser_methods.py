@@ -35,6 +35,10 @@ def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=N
 
     if canvas_height is None:
         height_str = root.get("height")
+        viewBox_str = root.get("viewBox")
+        if height_str is None and viewBox_str:
+            # "viewBox" attribute: <min-x, min-y, width, height>
+            height_str = viewBox_str.split()[3]
         canvas_height = float(height_str) if height_str.isnumeric() else float(height_str[:-2])
 
     curves = []
