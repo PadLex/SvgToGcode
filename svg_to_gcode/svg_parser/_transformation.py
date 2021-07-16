@@ -92,7 +92,7 @@ class Transformation:
 
         self.translation_matrix *= scale_matrix
 
-    def add_rotation(self, angle: float, around_x: float, around_y: float):
+    def add_rotation(self, angle: float, around_x=0.0, around_y=0.0):
         # Matrix rotation derived from https://github.com/DmitryBaranovskiy/raphael/blob/master/raphael.js#L2699
         angle = math.radians(angle)
         self.add_matrix(math.cos(angle), math.sin(angle), -math.sin(angle), math.cos(angle), around_x, around_y)
