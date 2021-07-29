@@ -92,18 +92,11 @@ class Transformation:
 
         self.translation_matrix *= scale_matrix
 
-    def add_rotation(self, angle: float):
-        self.transformation_record.append(("rotate", [angle]))
-
+    def add_rotation(self, angle: float, around_x=0.0, around_y=0.0):
+        # Matrix rotation derived from https://github.com/DmitryBaranovskiy/raphael/blob/master/raphael.js#L2699
         angle = math.radians(angle)
-        rotation_matrix = Matrix([
-            [math.cos(angle), -math.sin(angle), 0, 0],
-            [math.sin(angle), math.cos(angle),  0, 0],
-            [0,               0,                1, 0],
-            [0,               0,                0, 1]
-        ])
-
-        self.translation_matrix *= rotation_matrix
+        self.add_matrix(math.cos(angle), math.sin(angle), -math.sin(angle), math.cos(angle), around_x, around_y)
+        self.add_matrix(1, 0, 0, 1, -around_x, -around_y)
 
     def add_skew_x(self, angle):
         self.transformation_record.append(("skewX", [angle]))
