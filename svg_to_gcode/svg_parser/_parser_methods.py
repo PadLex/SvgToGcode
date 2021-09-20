@@ -19,36 +19,39 @@ def _parse_length(length: str):
     """
     Take a string that contains a CSS length value and return it in mm
     :param length: string containing a width or height attribute from an SVG
-    :return: the length in mm, or None if the string doesn't contain a length
+    :return: the length and scale factor, or None if the string doesn't contain a length
     """
     # The lengths can be just a number (if so we assume mm), or a number and
     # a unit: mm, in, cm, pt, px, pc
     # See https://www.w3.org/TR/CSS21/syndata.html#value-def-length for the details
-    ret = None
-    m = re.search('(\d+)[\.]*(\d*)(\w*)', length)
-    if m is not None:
-        # The various parts of m will give us the sections of the length
-        # Get the numeric part.  We reassemble this so that we don't accidentally
-        # try to convert strings with multiple "."s
-        num = float(m[1]+"."+m[2])
-        # We've got a physical unit, so we might need to scale things
-        if m[3] == "mm":
-            mult = 1
-        elif m[3] == "cm":
-            mult = 10
-        elif m[3] == "in":
-            mult = 25.4
-        elif m[3] == "pt":
-            mult = 25.4/72
-        elif m[3] == "pc":
-            mult = 12*25.4/72
-        elif m[3] == "px":
-            mult = 0.75*25.4/72
-        else:
-            # Default to mm
-            mult = 1
-        ret = num*mult
-    return ret
+    number = None
+    scale_factor = None
+    if length is not None:
+        m = re.search(r'(\d+[\.]*\d*)(\w*)', length)
+        if m is not None:
+            # The various parts of m will give us the sections of the length
+            # Get the numeric part.  We reassemble this so that we don't accidentally
+            # try to convert strings with multiple "."s
+            number = float(m[1])
+            unit_str = m[2]
+            # We've got a physical unit, so we might need to scale things
+            if unit_str == "mm":
+                scale_factor = 1.0
+            elif unit_str == "cm":
+                scale_factor = 10.0
+            elif unit_str == "in":
+                scale_factor = 25.4
+            elif unit_str == "pt":
+                scale_factor = 25.4/72.0
+            elif unit_str == "pc":
+                scale_factor = 25.4/6.0
+            elif unit_str == "px":
+                scale_factor = 25.4/96.0
+            else:
+                # Default to px
+                unit_str = "px"
+                scale_factor = 25.4/96.0
+    return number, scale_factor
 
 # Todo deal with viewBoxes
 def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=None, draw_hidden=False,
@@ -74,9 +77,16 @@ def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=N
         if height_str is None and viewBox_str:
             # "viewBox" attribute: <min-x, min-y, width, height>
             height_str = viewBox_str.split()[3]
-        canvas_height = _parse_length(height_str)
+        (number, scale_factor) = _parse_length(height_str)
+        canvas_height = number * scale_factor
 
-    if root.get("viewBox") is not None:
+    if root.get("viewBox") is None:
+        height_str = root.get("height")
+        if height_str is not None:
+            scale = 25.4/96.0
+            root_transformation = root_transformation if root_transformation else Transformation()
+            root_transformation.add_scale(scale, scale)
+    else:
         #print("We have a viewBox of >>%s<<" % (root.get("viewBox")))
         # Calulate the transform, as described in https://www.w3.org/TR/SVG/coords.html#ComputingAViewportsTransform
         p = re.compile("([\d\.\-e]+)[,\s]+([\d\.\-e]+)[,\s]+([\d\.\-e]+)[,\s]+([\d\.\-e]+)")
@@ -96,7 +106,8 @@ def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=N
             e_x = 0.0
             e_y = 0.0
             width_str = root.get("width")
-            e_width = _parse_length(width_str)
+            (e_number, e_multiply) = _parse_length(width_str)
+            e_width = e_number * e_multiply
             e_height = canvas_height
             scale_x = e_width/vb_width
             scale_y = e_height/vb_height

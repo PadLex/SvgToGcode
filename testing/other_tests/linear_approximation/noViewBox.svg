@@ -1,0 +1,6 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" width="377.95276" height="377.95276" version="1.1" id="svg24" ns1:docname="drawing.svg">
+   
+   <ns0:g>
+      <ns0:path d="M 50 50 L 124 50 L 87 150 z" fill="none" stroke="black" stroke-width="0.1mm" style="" />
+   </ns0:g>
+<ns0:g><ns0:defs><ns0:marker id="arrow-346" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="1" markerHeight="1" orient="auto-start-reverse"><ns0:path d="M 5 0 l 10 5 l -10 5 z" fill="yellow" stroke="black" stroke-width="0.1" /></ns0:marker></ns0:defs><ns0:path d="M50.0 50.0 L 124.00000000000001 50.0" style="fill:none;stroke:red;stroke-opacity:1;stroke-width:0.05mm;stroke-linecap:butt;stroke-linejoin:miter;" marker-mid="url(#arrow-346)" /><ns0:path d="M124.00000000000001 50.0 L 87.0 149.99999999999997" style="fill:none;stroke:red;stroke-opacity:1;stroke-width:0.05mm;stroke-linecap:butt;stroke-linejoin:miter;" marker-mid="url(#arrow-346)" /><ns0:path d="M87.0 149.99999999999997 L 50.0 50.0" style="fill:none;stroke:red;stroke-opacity:1;stroke-width:0.05mm;stroke-linecap:butt;stroke-linejoin:miter;" marker-mid="url(#arrow-346)" /></ns0:g></ns0:svg>
