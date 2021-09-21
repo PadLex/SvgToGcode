@@ -62,8 +62,7 @@ def generate_debug(approximations, svg_file_name, debug_file_name):
         change_origin.add_scale(1.0/scale, 1.0/scale)
     else:
         # TODO Build a more resilient parser here
-        parts = re.search(
-            r'([\d\.]+),?\s+([\d\.]+),?\s+([\d\.]+),?\s+([\d\.]+)', viewbox_str)
+        parts = re.search(r'([\d\.\-e]+)[,\s]+([\d\.\-e]+)[,\s]+([\d\.\-e]+)[,\s]+([\d\.\-e]+)', viewbox_str)
         if parts is not None:
             # TODO Can these values be anything other than numbers?  "123mm" maybe?
             #      The spec says they're "number"s, so no units, but possibly + or - or e-notation
