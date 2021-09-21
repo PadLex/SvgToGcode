@@ -89,7 +89,7 @@ def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=N
     else:
         #print("We have a viewBox of >>%s<<" % (root.get("viewBox")))
         # Calulate the transform, as described in https://www.w3.org/TR/SVG/coords.html#ComputingAViewportsTransform
-        p = re.compile("([\d\.\-e]+)[,\s]+([\d\.\-e]+)[,\s]+([\d\.\-e]+)[,\s]+([\d\.\-e]+)")
+        p = re.compile(r'([\d\.\-e]+)[,\s]+([\d\.\-e]+)[,\s]+([\d\.\-e]+)[,\s]+([\d\.\-e]+)')
         if p.search(root.get("viewBox")):
             parts = p.search(root.get("viewBox"))
             # TODO Can these values be anything other than numbers?  "123mm" maybe?
