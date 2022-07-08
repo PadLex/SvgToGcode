@@ -1,6 +1,5 @@
 
 # Svg to Gcode - Flamma project
-### The definitive NPM module to construct gcode from svg files.
 Don't feel like coding? Use the [Inkscape extension](https://github.com/JTechPhotonics/J-Tech-Photonics-Laser-Tool).
 
 This library's intended purpose is to laser-cut svg images. However, it is structured such that it can be easily 
