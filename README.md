@@ -1,6 +1,5 @@
 
 # Svg to Gcode - Flamma project
-### The definitive NPM module to construct gcode from svg files.
 Don't feel like coding? Use the [Inkscape extension](https://github.com/JTechPhotonics/J-Tech-Photonics-Laser-Tool).
 
 This library's intended purpose is to laser-cut svg images. However, it is structured such that it can be easily 
@@ -89,24 +88,14 @@ gcode_compiler.compile_to_file("drawing.gcode")
 Before compiling, you could append or modify geometric curves. I'm not sure why you would want to, but you can.
 The code below draws a fractal and compiles it to gcode.
 
-```python
-from svg_to_gcode.svg_parser import parse_file
-from svg_to_gcode.compiler import Compiler, interfaces
-from svg_to_gcode.formulas import linear_map
-
-# Instantiate a compiler, specifying the custom interface and the speed at which the tool should move.
-gcode_compiler = Compiler(interfaces.Gcode, movement_speed=1000, cutting_speed=300, pass_depth=5)
-
-curves = parse_file("drawing.svg") # Parse an svg file into geometric curves
-
-gcode_compiler.append_curves(curves) 
-gcode_compiler.compile_to_file("drawing.gcode")
+```
+Ups. Looks like this example was never filled in...
 ```
 
 ### Approximation tolerance
 Gcode only supports liner and circular arcs. Currently I've only implemented a line segment approximation. As such, 
 geometric curves are compiled to a chain of line-segments. The exact length of the segments is adjusted dynamically such
-that it never diverges from the original curve by more then the value of the TOLERANCES['approximation'] key.
+that it never diverges from the original curve by more then the value specified by TOLERANCES['approximation'].
 
 The default value is 0.1. Smaller values improve accuracy, larger ones result in shorter gcode files.
 
