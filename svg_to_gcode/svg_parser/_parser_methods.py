@@ -1,7 +1,6 @@
 from xml.etree import ElementTree
 from typing import List
 from copy import deepcopy
-import re
 
 from svg_to_gcode.svg_parser import Path, Transformation
 from svg_to_gcode.geometry import Curve
@@ -15,43 +14,6 @@ def _has_style(element: ElementTree.Element, key: str, value: str) -> bool:
     """
     return element.get(key) == value or (element.get("style") and f"{key}:{value}" in element.get("style"))
 
-def _parse_length(length: str):
-    """
-    Take a string that contains a CSS length value and return it in mm
-    :param length: string containing a width or height attribute from an SVG
-    :return: the length and scale factor, or None if the string doesn't contain a length
-    """
-    # The lengths can be just a number (if so we assume mm), or a number and
-    # a unit: mm, in, cm, pt, px, pc
-    # See https://www.w3.org/TR/CSS21/syndata.html#value-def-length for the details
-    number = None
-    scale_factor = None
-    if length is not None:
-        m = re.search(r'(\d+[\.]*\d*)(\w*)', length)
-        if m is not None:
-            # The various parts of m will give us the sections of the length
-            # Get the numeric part.  We reassemble this so that we don't accidentally
-            # try to convert strings with multiple "."s
-            number = float(m[1])
-            unit_str = m[2]
-            # We've got a physical unit, so we might need to scale things
-            if unit_str == "mm":
-                scale_factor = 1.0
-            elif unit_str == "cm":
-                scale_factor = 10.0
-            elif unit_str == "in":
-                scale_factor = 25.4
-            elif unit_str == "pt":
-                scale_factor = 25.4/72.0
-            elif unit_str == "pc":
-                scale_factor = 25.4/6.0
-            elif unit_str == "px":
-                scale_factor = 25.4/96.0
-            else:
-                # Default to px
-                unit_str = "px"
-                scale_factor = 25.4/96.0
-    return number, scale_factor
 
 # Todo deal with viewBoxes
 def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=None, draw_hidden=False,
@@ -73,64 +35,7 @@ def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=N
 
     if canvas_height is None:
         height_str = root.get("height")
-        viewBox_str = root.get("viewBox")
-        if height_str is None and viewBox_str:
-            # "viewBox" attribute: <min-x, min-y, width, height>
-            height_str = viewBox_str.split()[3]
-        (number, scale_factor) = _parse_length(height_str)
-        canvas_height = number * scale_factor
-
-    if root.get("viewBox") is None:
-        height_str = root.get("height")
-        if height_str is not None:
-            scale = 25.4/96.0
-            root_transformation = root_transformation if root_transformation else Transformation()
-            root_transformation.add_scale(scale, scale)
-    else:
-        #print("We have a viewBox of >>%s<<" % (root.get("viewBox")))
-        # Calulate the transform, as described in https://www.w3.org/TR/SVG/coords.html#ComputingAViewportsTransform
-        p = re.compile(r'([\d\.\-e]+)[,\s]+([\d\.\-e]+)[,\s]+([\d\.\-e]+)[,\s]+([\d\.\-e]+)')
-        if p.search(root.get("viewBox")):
-            parts = p.search(root.get("viewBox"))
-            # TODO Can these values be anything other than numbers?  "123mm" maybe?
-            #      The spec says they're "number"s, so no units, but possibly + or - or e-notation
-            vb_x = float(parts[1])
-            vb_y = float(parts[2])
-            vb_width = float(parts[3])
-            vb_height = float(parts[4])
-            # TODO handle the preserveAspectRatio attribute
-            # Defaults if not otherwise specified
-            align = "xMidYMid"
-            meet_or_slice = "meet"
-
-            e_x = 0.0
-            e_y = 0.0
-            width_str = root.get("width")
-            (e_number, e_multiply) = _parse_length(width_str)
-            e_width = e_number * e_multiply
-            e_height = canvas_height
-            scale_x = e_width/vb_width
-            scale_y = e_height/vb_height
-            #print("vb_x: %f, vb_y: %f, vb_width: %f, vb_height: %f" % (vb_x, vb_y, vb_width, vb_height))
-            #print("e_x: %f, e_y: %f, e_width: %f, e_height: %f, scale_x: %f, scale_y: %f" % (e_x, e_y, e_width, e_height, scale_x, scale_y))
-            if align != "none" and meet_or_slice == "meet":
-                if scale_x > scale_y:
-                    scale_x = scale_y
-                else:
-                    scale_y = scale_x
-            if align != "none" and meet_or_slice == "slice":
-                if scale_x < scale_y:
-                    scale_x = scale_y
-                else:
-                    scale_y = scale_x
-            translate_x = e_x - (vb_x * scale_x)
-            translate_y = e_y - (vb_y * scale_y)
-            # Now apply the viewBox transformations
-            root_transformation = root_transformation if root_transformation else Transformation()
-            if translate_x != 0 or translate_y != 0:
-                root_transformation.add_translation(translate_x, translate_y)
-            if scale_x != 1.0 or scale_y != 1.0:
-                root_transformation.add_scale(scale_x, scale_y)
+        canvas_height = float(height_str) if height_str.isnumeric() else float(height_str[:-2])
 
     curves = []
 

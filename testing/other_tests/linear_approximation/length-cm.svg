@@ -1,5 +1,0 @@
-<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" width="100cm" height="150cm" viewBox="0 0 100 150" version="1.1" id="svg24" ns1:docname="drawing.svg">
-   <ns0:g>
-      <ns0:path d="M 30 50 L 80 50 L 55 150 z" fill="none" stroke="black" stroke-width="0.1mm" style="" />
-   </ns0:g>
-<ns0:g><ns0:defs><ns0:marker id="arrow-346" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="1" markerHeight="1" orient="auto-start-reverse"><ns0:path d="M 5 0 l 10 5 l -10 5 z" fill="yellow" stroke="black" stroke-width="0.1" /></ns0:marker></ns0:defs><ns0:path d="M30.0 50.0 L 80.0 50.0" style="fill:none;stroke:red;stroke-opacity:1;stroke-width:0.05mm;stroke-linecap:butt;stroke-linejoin:miter;" marker-mid="url(#arrow-346)" /><ns0:path d="M80.0 50.0 L 55.0 150.0" style="fill:none;stroke:red;stroke-opacity:1;stroke-width:0.05mm;stroke-linecap:butt;stroke-linejoin:miter;" marker-mid="url(#arrow-346)" /><ns0:path d="M55.0 150.0 L 30.0 50.0" style="fill:none;stroke:red;stroke-opacity:1;stroke-width:0.05mm;stroke-linecap:butt;stroke-linejoin:miter;" marker-mid="url(#arrow-346)" /></ns0:g></ns0:svg>
