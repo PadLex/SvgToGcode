@@ -1,0 +1,4 @@
+.idea
+svg_to_gcode.egg-info
+__pycache__
+.DS_Store
