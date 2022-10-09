@@ -1,4 +1,5 @@
 import os
+sys.path.insert(0, '..')
 from testing import comparison_tests, other_tests
 
 
