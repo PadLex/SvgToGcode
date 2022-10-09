@@ -1,4 +1,3 @@
-
 # Svg to Gcode - Flamma project
 Don't feel like coding? Use the [Inkscape extension](https://github.com/JTechPhotonics/J-Tech-Photonics-Laser-Tool).
 
@@ -29,20 +28,28 @@ The module is divided in three sub-modules:
 
 ### Basic Usage
 If all you need is to compile an svg image to gcode, for a standard cnc machine, this is all the code you need. Just 
-remember to select your own cutting and movement speeds.  
+remember to set machine dependend parameter 'maximum laser power' and select your own cutting speed.
+Note that all current parameters and defaults can be viewed in svg_to_code/__init__.py
 
 ```python
 from svg_to_gcode.svg_parser import parse_file
 from svg_to_gcode.compiler import Compiler, interfaces
 
-# Instantiate a compiler, specifying the interface type and the speed at which the tool should move. pass_depth controls
-# how far down the tool moves after every pass. Set it to 0 if your machine does not support Z axis movement.
-gcode_compiler = Compiler(interfaces.Gcode, movement_speed=1000, cutting_speed=300, pass_depth=5)
+# Instantiate a compiler, specifying the interface type, maximum_laser_power and speed at which the tool moves while 
+# cutting. (Note that rapid moves - moves to and from cuts - move at a machine defined speed and are not set here.)
+# pass_depth controls how far down the tool moves - how deep the laser cuts - after every pass. Set it to 0 (default)
+# if your machine # does not support Z axis movement.
+gcode_compiler = Compiler(interfaces.Gcode, params={"maximum_laser_power":1000","movement_speed":900,"pass_depth":5})
 
-curves = parse_file("drawing.svg") # Parse an svg file into geometric curves
+# Parse an svg file into geometric curves, and compile to gcode
+curves = parse_file("drawing.svg")
+gcode_compiler.append_curves(curves)
 
-gcode_compiler.append_curves(curves) 
-gcode_compiler.compile_to_file("drawing.gcode", passes=2)
+# do final compilation and emit gcode 2 ('passes') times
+gcode_compiler.compile(passes=2)
+
+# or, to combine the above 2 steps into one and emit to a file:
+# gcode_compiler.compile_to_file("drawing.gcode", parse_file("drawing.svg"), passes=2)
 ```
 
 ### Custom interfaces
@@ -51,36 +58,41 @@ to a completely new numerical control language without modifying the compiler. Y
  perform additional operations (like powering a fan) or to modify the gcode commands used to perform existing operations
   (some DIY laser cutters, for example, control the laser diode from the fan output). 
 
-The code bellow implements a custom interface which powers on a fan every time the laser is powered on. 
+The code bellow implements a custom interface which powers on a - special mode - fan every time the laser is powered on. 
 ```python
+
 from svg_to_gcode.svg_parser import parse_file
 from svg_to_gcode.compiler import Compiler, interfaces
 from svg_to_gcode.formulas import linear_map
 
 class CustomInterface(interfaces.Gcode):
-    def __init__(self):
-        super().__init__()
-        self.fan_speed = 1
-    
-    # Override the laser_off method such that it also powers off the fan.
-    def laser_off(self):
-        return "M107;\n" + "M5;"  # Turn off the fan + turn off the laser
 
-    # Override the set_laser_power method
+    # Override the set_laser_power method, use gcode M7 - mist coolant - instead of M8 - flood coolant - 
+    # (note that setting 'fan' must be True for this to work)
     def set_laser_power(self, power):
         if power < 0 or power > 1:
             raise ValueError(f"{power} is out of bounds. Laser power must be given between 0 and 1. "
                              f"The interface will scale it correctly.")
+	# set power for next linear move   
+        self._next_laser_power = int(linear_map(self._machine_params['minimum_laser_power'], self._machine_params['maximum_laser_power'], power))
 
-        return f"M106 S255\n" + f"M3 S{linear_map(0, 255, power)};"  # Turn on the fan + change laser power
+        # (fan on when available, use M7 instead of M8), laser_on
+        new_mode = ("\nM7" if self._machine_params['fan'] else '') + ("\n" + self._laser_mode if self._laser_mode_changed else '')
+        self._laser_mode_changed = False
+	# return laser mode (M3 constant laser power or M4 dynamic laser power) when laser mode changed
+        return f"; Cut at {self._next_speed} {self._unit}/min, {int(power * 100)}% power{new_mode}"
 
-# Instantiate a compiler, specifying the custom interface and the speed at which the tool should move.
-gcode_compiler = Compiler(CustomInterface, movement_speed=1000, cutting_speed=300, pass_depth=5)
+gcode_compiler = Compiler(CustomInterface, params={"laser_power":1.0,"movement_speed":300,"maximum_laser_power":255,"dwell_time":400,"fan":True})
 
-curves = parse_file("drawing.svg") # Parse an svg file into geometric curves
+# Parse an svg file into geometric curves, and compile to gcode
+curves = parse_file("drawing.svg")
+gcode_compiler.append_curves(curves)
 
-gcode_compiler.append_curves(curves) 
-gcode_compiler.compile_to_file("drawing.gcode")
+# do final compilation and emit gcode
+gcode_compiler.compile()
+
+# or, to combine the above 2 steps into one and emit to a file:
+# gcode_compiler.compile_to_file("drawing.gcode", parse_file("drawing.svg"))
 ```
 
 ### Insert or Modify Geometry
