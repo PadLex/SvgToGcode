@@ -70,16 +70,18 @@ class Compiler:
             warnings.warn("Compile with an empty body (no curves). Is this intentional?")
 
         # add generator info and boundingbox for this code
-        gcode = [f"; SvgToGcode v{version('svg_to_gcode')}", f"; GRBL 1.1, unit={self.settings['unit']}, {self.settings['distance_mode']} coordinates",
-                 f"; Boundingbox: (X{self._boundingbox[0].x:.{0 if self._boundingbox[0].x.is_integer() else self.precision}f},"
-                 f"Y{self._boundingbox[0].y:.{0 if self._boundingbox[0].y.is_integer() else self.precision}f}) to "
-                 f"(X{self._boundingbox[1].x:.{0 if self._boundingbox[1].x.is_integer() else self.precision}f},"
-                 f"Y{self._boundingbox[1].y:.{0 if self._boundingbox[1].y.is_integer() else self.precision}f})"]
+        gcode = [f"; SvgToGcode v{version('svg_to_gcode')}", f"; GRBL 1.1, unit={self.settings['unit']}, {self.settings['distance_mode']} coordinates"]
 
-        if not self.check_bounds():
-            warnings.warn("Cut is not within machine bounds. Is this intentional?")
-            gcode += ["; WARNING: Cut is not within machine bounds of "
-                      f"X[0,{self.settings['x_axis_maximum_travel']}], Y[0,{self.settings['y_axis_maximum_travel']}]"]
+        if self._boundingbox:
+            gcode += [ f"; Boundingbox: (X{self._boundingbox[0].x:.{0 if self._boundingbox[0].x.is_integer() else self.precision}f},"
+                       f"Y{self._boundingbox[0].y:.{0 if self._boundingbox[0].y.is_integer() else self.precision}f}) to "
+                       f"(X{self._boundingbox[1].x:.{0 if self._boundingbox[1].x.is_integer() else self.precision}f},"
+                       f"Y{self._boundingbox[1].y:.{0 if self._boundingbox[1].y.is_integer() else self.precision}f})"]
+
+            if not self.check_bounds():
+                warnings.warn("Cut is not within machine bounds. Is this intentional?")
+                gcode += ["; WARNING: Cut is not within machine bounds of "
+                          f"X[0,{self.settings['x_axis_maximum_travel']}], Y[0,{self.settings['y_axis_maximum_travel']}]"]
 
         gcode.extend(self.header)
         for i in range(passes):
@@ -163,11 +165,8 @@ class Compiler:
         """
         for curve in curves:
             line_chain = LineSegmentChain()
-
             approximation = LineSegmentChain.line_segment_approximation(curve)
-
             line_chain.extend(approximation)
-
             self.append_line_chain(line_chain)
 
     def check_bounds(self):
