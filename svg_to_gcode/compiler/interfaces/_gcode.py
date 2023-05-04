@@ -145,6 +145,7 @@ class Gcode(Interface):
         return command + ''
 
     def laser_off(self):
+	self._laser_mode = 'M5'	
         self._laser_mode_changed = True
         new_mode = "M5" + ("\nM9" if self._machine_params['fan'] else '') # laser off, (fan off when available)
         return f"{new_mode}"
