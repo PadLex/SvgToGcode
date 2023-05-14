@@ -3,9 +3,15 @@ from typing import List
 from copy import deepcopy
 
 from svg_to_gcode.svg_parser import Path, Transformation
-from svg_to_gcode.geometry import Curve
+from svg_to_gcode.geometry import Curve, Vector, RasterImage
 
-NAMESPACES = {'svg': 'http://www.w3.org/2000/svg'}
+import base64
+from PIL import Image
+import numpy as np
+from io import BytesIO
+
+NAMESPACES = {'svg': 'http://www.w3.org/2000/svg',
+              'xlink':'http://www.w3.org/1999/xlink'}
 
 
 def _has_style(element: ElementTree.Element, key: str, value: str) -> bool:
@@ -38,10 +44,8 @@ def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=N
         canvas_height = float(height_str) if height_str.isnumeric() else float(height_str[:-2])
 
     curves = []
-
     # Draw visible elements (Depth-first search)
     for element in list(root):
-
         # display cannot be overridden by inheritance. Just skip the element
         display = _has_style(element, "display", "none")
 
@@ -52,8 +56,11 @@ def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=N
 
         transform = element.get('transform')
         if transform:
+            #print("transform: ", transform)
             transformation = Transformation() if transformation is None else transformation
             transformation.add_transform(transform)
+            #print("transformation: ", transformation)
+            #print("after add_transform ...")
 
         # Is the element and it's root not hidden?
         visible = visible_root and not (_has_style(element, "visibility", "hidden")
@@ -64,8 +71,25 @@ def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=N
         # If the current element is opaque and visible, draw it
         if draw_hidden or visible:
             if element.tag == "{%s}path" % NAMESPACES["svg"]:
-                path = Path(element.attrib['d'], canvas_height, transform_origin, transformation)
-                curves.extend(path.curves)
+                 path = Path(element.attrib['d'], canvas_height, transform_origin, transformation)
+                 curves.extend(path.curves)
+            else:
+                if element.tag == "{%s}image" % NAMESPACES["svg"]:
+                    # svg image
+
+                    # update transformation
+                    ri_transformation = Transformation()
+
+                    if transform_origin:
+                        ri_transformation.add_translation(0, canvas_height)
+                        ri_transformation.add_scale(1, -1)
+
+                    if transformation is not None:
+                        ri_transformation.extend(transformation)
+
+                    # instantiate curve (image)
+                    ri = RasterImage(element.attrib, element.attrib["{%s}href" % NAMESPACES["xlink"]], ri_transformation)
+                    curves.append(ri)
 
         # Continue the recursion
         curves.extend(parse_root(element, transform_origin, canvas_height, draw_hidden, visible, transformation))
