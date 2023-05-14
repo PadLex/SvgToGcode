@@ -11,6 +11,8 @@ verbose = False
 
 class Gcode(Interface):
 
+    warn_nr = 0
+
     def __init__(self):
         self.position = None
         self._next_speed = None
@@ -41,12 +43,12 @@ class Gcode(Interface):
         return ''
 
     def rapid_move(self, x=None, y=None, z=None):
-        # While in laser mode, G0 command sets 'rapid move' and disables the laser during the move (non cut moves),
-        # G1 sets 'linear move' and makes a cut when the laser mode is either M3 (constant laser power) or M4 (dynamic
-        # laser power). M4 does a cut only when an actual move takes place (otherwise the laser is disabled).
+	# While in laser mode, G0 command sets 'rapid move' and disables the laser during the move (non cut moves),
+	# G1 sets 'linear move' and makes a cut when the laser mode is either M3 (constant laser power) or M4 (dynamic
+	# laser power). M4 does a cut only when an actual move takes place (otherwise the laser is disabled).
 
-        # Note that G1 can have parameters ('Spindle Speed' and or 'Feed Rate'), but G0 can have none.
-        # Note also that G0 is the default motion mode upon power up and reset.
+	# Note that G1 can have parameters ('Spindle Speed' and or 'Feed Rate'), but G0 can have none.
+	# Note also that G0 is the default motion mode upon power up and reset.
         # See https://github.com/gnea/grbl/wiki/Grbl-v1.1-Laser-Mode
 
         # Don't do anything if rapid move was called without passing a value.
@@ -87,12 +89,12 @@ class Gcode(Interface):
         return command
 
     def linear_move(self, x=None, y=None, z=None):
-        # While in laser mode, G0 command sets 'rapid move' and disables the laser during the move (non cut moves),
-        # G1 sets 'linear move' and makes a cut when the laser mode is either M3 (constant laser power) or M4 (dynamic
-        # laser power). M4 does a cut only when an actual move takes place (otherwise the laser is disabled).
+	# While in laser mode, G0 command sets 'rapid move' and disables the laser during the move (non cut moves),
+	# G1 sets 'linear move' and makes a cut when the laser mode is either M3 (constant laser power) or M4 (dynamic
+	# laser power). M4 does a cut only when an actual move takes place (otherwise the laser is disabled).
 
-        # Note that G1 can have parameters ('Spindle Speed' and or 'Feed Rate'), but G0 can have none.
-        # Note also that G0 is the default motion mode upon power up and reset.
+	# Note that G1 can have parameters ('Spindle Speed' and or 'Feed Rate'), but G0 can have none.
+	# Note also that G0 is the default motion mode upon power up and reset.
         # See https://github.com/gnea/grbl/wiki/Grbl-v1.1-Laser-Mode
 
         if self._next_speed is None:
@@ -116,16 +118,18 @@ class Gcode(Interface):
 
         # Don't do anything if the move is redundant.
         if command == '':
-            warnings.warn("linear_move command to the same position.")
+            if Gcode.warn_nr > 2:
+                warnings.warn("linear_move command to the same position.")
+            Gcode.warn_nr += 1
             return ''
 
-        # Note that G1 can have parameters 'Spindle Speed' (laser power) and or 'Feed Rate' (cutting speed), but G0 can have none.
+	# Note that G1 can have parameters 'Spindle Speed' (laser power) and or 'Feed Rate' (cutting speed), but G0 can have none.
         command = "G1" + command
-        # add laser power (Spindle speed) parameter when laser power changes
+	# add laser power (spindle speed) parameter when cutting speed changes
         if self._current_laser_power != self._next_laser_power:
             self._current_laser_power = self._next_laser_power
             command += f" S{self._current_laser_power}"
-        # add movement speed (Feed rate) parameter when cutting speed changes
+	# add movement speed (Feed rate) parameter when cutting speed changes
         if self._current_speed != self._next_speed:
             self._current_speed = self._next_speed
             command += f" F{self._current_speed}"
@@ -145,7 +149,7 @@ class Gcode(Interface):
         return command + ''
 
     def laser_off(self):
-	self._laser_mode = 'M5'	
+        self._laser_mode = 'M5'
         self._laser_mode_changed = True
         new_mode = "M5" + ("\nM9" if self._machine_params['fan'] else '') # laser off, (fan off when available)
         return f"{new_mode}"
@@ -154,17 +158,17 @@ class Gcode(Interface):
         if power < 0 or power > 1:
             raise ValueError(f"{power} is out of bounds. Laser power must be given between 0 and 1. "
                              f"The interface will scale it correctly.")
-        # set power for next linear move
+	# set power for next linear move
         self._next_laser_power = int(linear_map(self._machine_params['minimum_laser_power'], self._machine_params['maximum_laser_power'], power))
 
         # (fan on when available), laser_on
         new_mode = ("\nM8" if self._machine_params['fan'] else '') + ("\n" + self._laser_mode if self._laser_mode_changed else '')
         self._laser_mode_changed = False
-        # return laser mode (M3 constant laser power or M4 dynamic laser power) when laser mode changed
+	# return laser mode (M3 constant laser power or M4 dynamic laser power) when laser mode changed
         return f"; Cut at {self._next_speed} {self._unit}/min, {int(power * 100)}% power{new_mode}"
 
     def set_laser_mode(self, mode):
-	    # set constant/dynamic laser power mode
+	# set constant/dynamic laser power mode
         previous_laser_mode = self._laser_mode
         self._laser_mode = 'M3' if mode == "constant" else 'M4'
 
