@@ -1,7 +1,7 @@
 # Svg to Gcode - Flamma project
 Don't feel like coding? Use the [Inkscape extension](https://github.com/JTechPhotonics/J-Tech-Photonics-Laser-Tool).
 
-This library's intended purpose is to laser-cut svg drawings (<svg:path ..> tags) and engrave images (<svg: image ..> tags).
+This library's intended purpose is to laser-cut svg drawings```<svg:path ..> tags```and engrave images```<svg: image ..> tags```.
 However, it is structured such that it can be easily expanded to parse other image formats or compile to different numerical control languages.
 
 A commandline steering program is available: see project svg2gcode.
