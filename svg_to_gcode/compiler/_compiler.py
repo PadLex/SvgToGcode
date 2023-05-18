@@ -2,21 +2,20 @@ import warnings
 import math
 import copy
 
-import numpy as np
 from io import BytesIO
-
 from typing import Any
 from importlib.metadata import version
+
+import base64
+import numpy as np
+
 from svg_to_gcode.compiler.interfaces import Interface
 from svg_to_gcode.geometry import Curve
 from svg_to_gcode.geometry import LineSegmentChain, Vector, RasterImage
 from svg_to_gcode import DEFAULT_SETTING
 from svg_to_gcode import TOLERANCES, SETTING, check_setting
 
-import base64
 from PIL import Image
-import numpy as np
-from io import BytesIO
 
 class Compiler:
     """
@@ -32,7 +31,7 @@ class Compiler:
         :param custom_header: A list of commands to be executed before all generated commands.
         :param custom_footer: A list of commands to be executed after all generated commands.
                               Default [laser_off, program_end]
-	    :param settings: dictionary to specify "unit", "pass_depth", "dwell_time", "movement_speed", etc.
+	:param settings: dictionary to specify "unit", "pass_depth", "dwell_time", "movement_speed", etc.
         """
         self._boundingbox = None
         self.interface = interface_class()
@@ -78,9 +77,9 @@ class Compiler:
         """
 
         if len(self.body) == 0:
-            warnings.warn("Compile with an empty body (no curves). Is this intentional?")
+            warnings.warn("Compile with an empty body (no curves).")
 
-	    # add generator info and boundingbox for this code
+	# add generator info and boundingbox for this code
         gcode = [f"; SvgToGcode v{version('svg_to_gcode')}", f"; GRBL 1.1, unit={self.settings['unit']}, {self.settings['distance_mode']} coordinates"]
 
         if self._boundingbox:
@@ -91,7 +90,7 @@ class Compiler:
 
             if not self.check_bounds():
                 if self.settings["distance_mode"] == "absolute" and self.check_axis_maximum_travel():
-                    warnings.warn("Cut is not within machine bounds. Is this intentional?")
+                    warnings.warn("Cut is not within machine bounds.")
                     gcode += ["; WARNING: Cut is not within machine bounds of "
                               f"X[0,{self.settings['x_axis_maximum_travel']}], Y[0,{self.settings['y_axis_maximum_travel']}]"]
                 elif not self.check_axis_maximum_travel():
@@ -126,6 +125,7 @@ class Compiler:
 
         if len(self.gcode) == 0:
             warnings.warn("Compile with no images.")
+            return ''
 
         header_gc = ["M5","M8", "M4"]
         # laser off, fan off, program stop
@@ -148,9 +148,11 @@ class Compiler:
         with open(file_name, 'w') as file:
             file.write(self.compile(passes=passes))
 
-        # write image objects
-        with open(file_name.rsplit('.',1)[0] + "_images." + file_name.rsplit('.',1)[1], 'w') as file:
-            file.write(self.compile_images())
+        images_gcode = self.compile_images()
+        if images_gcode:
+            # write image objects
+            with open(file_name.rsplit('.',1)[0] + "_images." + file_name.rsplit('.',1)[1], 'w') as file:
+                file.write(images_gcode)
 
     def append_line_chain(self, line_chain: LineSegmentChain):
         """
@@ -237,7 +239,6 @@ class Compiler:
     def image2gcode(self, img_attrib: dict[str, Any], img=None, transformation = None):
 
         invert_intensity = True
-        height, width = img.shape
 
         # get svg image attribute/object info (set in Inkscape for example) when available
         # else set tool invocation values
@@ -331,8 +332,6 @@ class Compiler:
 
             # change print direction
             left2right = not left2right
-
-        return
 
     def append_curves(self, curves: list[Curve]):
         """
