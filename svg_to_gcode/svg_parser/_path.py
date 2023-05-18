@@ -5,7 +5,6 @@ from typing import List
 
 from svg_to_gcode.geometry import Vector
 from svg_to_gcode.geometry import Line, EllipticalArc, CubicBazier, QuadraticBezier
-from svg_to_gcode.svg_parser import Transformation
 from svg_to_gcode import formulas
 
 verbose = False
@@ -17,26 +16,16 @@ class Path:
     command_lengths = {'M': 2, 'm': 2, 'L': 2, 'l': 2, 'H': 1, 'h': 1, 'V': 1, 'v': 1, 'Z': 0, 'z': 0, 'C': 6, 'c': 6,
                        'Q': 4, 'q': 4, 'S': 4, 's': 4, 'T': 2, 't': 2, 'A': 7, 'a': 7}
 
-    __slots__ = "curves", "initial_point", "current_point", "last_control", "canvas_height", "draw_move", \
-                "transform_origin", "transformation"
+    __slots__ = "curves", "initial_point", "current_point", "last_control", "draw_move", "transformation"
 
-    def __init__(self, d: str, canvas_height: float, transform_origin=True, transformation=None):
-        self.canvas_height = canvas_height
-        self.transform_origin = transform_origin
+    def __init__(self, d: str, transformation=None):
 
         self.curves = []
         self.initial_point = Vector(0, 0)  # type: Vector
         self.current_point = Vector(0, 0)
         self.last_control = None  # type: Vector
 
-        self.transformation = Transformation()
-
-        if self.transform_origin:
-            self.transformation.add_translation(0, canvas_height)
-            self.transformation.add_scale(1, -1)
-
-        if transformation is not None:
-            self.transformation.extend(transformation)
+        self.transformation = transformation
 
         try:
             self._parse_commands(d)
