@@ -308,10 +308,10 @@ class Compiler:
                     if transformation is not None:
                         XYt = transformation.apply_affine_transformation(Vector(X, Y))
                         code = f"X{round(XYt[0],XY_prec)}Y{round(XYt[1],XY_prec)}"
-                        code += f"S{prev_pow}" if laserpow != prev_pow else ''
+                        code += f"S{prev_pow}"
                     else:
                         code = f"X{X}"
-                        code += f"S{prev_pow}" if laserpow != prev_pow else ''
+                        code += f"S{prev_pow}"
                     self.gcode += [code]
 
                     if count == line.size-1:
