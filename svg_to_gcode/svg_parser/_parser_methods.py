@@ -47,12 +47,6 @@ def add_viewbox_transformation(transformation: Transformation, transform_origin,
     # As a consequence, only viewBox values have to be taken into account.
 
     if transform_origin:
-        # viewBox "x" and "y" represent the upper left corner of the document.
-        # when non zero, the upper left corner should be corrected to (0,0)
-        # (a laser or CNC machine has a positive workarea only, which should be as large as possible)
-        if vwbox["x"] or vwbox["y"]:
-            up_transformation.add_translation(-vwbox["x"],-vwbox["y"])
-
         # viewBox "width" and "height" represent the dimensions of the 'svg'
         # (a rectangle - left upper at (vwbox['x'],vwbox['y']) - in user space)
 
@@ -62,6 +56,12 @@ def add_viewbox_transformation(transformation: Transformation, transform_origin,
         up_transformation.add_translation(0, vwbox["height"])       # Translation
         up_transformation.add_scale(1, -1)                          # T * Scale
         # applying it to a vector:                                  # T * S * Vector(x,y)
+
+        # viewBox "x" and "y" represent the upper left corner of the document.
+        # when non zero, the upper left corner should be corrected to (0,0)
+        # (a laser or CNC machine has a positive workarea only, which should be as large as possible)
+        if vwbox["x"] or vwbox["y"]:
+            up_transformation.add_translation(-vwbox["x"],-vwbox["y"])
 
     if transformation is not None:
         up_transformation.extend(transformation)
@@ -78,7 +78,7 @@ def get_viewBox(root: ElementTree.Element) -> {}:
 
     if root_vwbox:
         # viewBox info in user-units (Inkscape defaults to 'user-unit' in mm: 1 user-unit is 1 mm).
-        vwbox["x"], vwbox["y"], vwbox["width"], vwbox["height"] = re.findall("[0-9]+\.?[0-9]*", root_vwbox)
+        vwbox["x"], vwbox["y"], vwbox["width"], vwbox["height"] = re.findall("\-?[0-9]+\.?[0-9]*", root_vwbox)
 
         # viewBox "x" and "y" represent the upper left corner of the document.
         # when non zero, the upper left corner of the canvas should be corrected to (0,0)
