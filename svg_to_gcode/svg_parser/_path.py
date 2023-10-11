@@ -199,7 +199,7 @@ class Path:
             else:
                 bazier = absolute_quadratic_bazier(*control2, *end)
 
-            self.current_point = start
+            self.current_point = end
 
             return bazier
 
