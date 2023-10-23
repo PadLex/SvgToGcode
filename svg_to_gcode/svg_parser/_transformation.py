@@ -27,8 +27,9 @@ class Transformation:
 
     def __repr__(self):
         transformations = ", ".join(
-            [f"{transformation[0]}("f"{', '.join(map(lambda x: str(x), self.transformation_record[0][1]))})"
+            [f"{transformation[0]}("f"{', '.join(map(lambda x: str(x), transformation[1]))})"
                                     for transformation in self.transformation_record])
+
         return f"Transformation({transformations})"
 
     def __deepcopy__(self, memodict={}):
@@ -92,13 +93,13 @@ class Transformation:
 
         self.translation_matrix *= scale_matrix
 
-    def add_rotation(self, angle: float):
-        self.transformation_record.append(("rotate", [angle]))
+    def add_rotation(self, angle: float, center_x: float =0.0, center_y: float =0.0):
+        self.transformation_record.append(("rotate", [angle, center_x, center_y]))
 
         angle = math.radians(angle)
         rotation_matrix = Matrix([
-            [math.cos(angle), -math.sin(angle), 0, 0],
-            [math.sin(angle), math.cos(angle),  0, 0],
+            [math.cos(angle), -math.sin(angle), -center_x * math.cos(angle) + center_y * math.sin(angle) + center_x, 0],
+            [math.sin(angle), math.cos(angle),  -center_x * math.sin(angle) - center_y * math.cos(angle) + center_y, 0],
             [0,               0,                1, 0],
             [0,               0,                0, 1]
         ])

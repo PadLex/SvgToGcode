@@ -12,13 +12,37 @@ class Interface:
     # Todo convert to abc class
     # Todo add requirement self.position
 
+    def set_machine_parameters(self, params) -> str:
+        """
+        Set machine parameters.
+
+        :return: ''.
+        """
+        raise NotImplementedError("Interface class must implement code_initialize")
+
+    def code_initialize(self) -> str:
+        """
+        Initialize machine.
+
+        :return: Appropriate commands.
+        """
+        raise NotImplementedError("Interface class must implement code_initialize")
+
     def set_movement_speed(self, speed) -> str:
         """
         Changes the speed at which the tool moves.
 
         :return: Appropriate command.
         """
-        raise NotImplementedError("Interface class must implement the set_speed command")
+        raise NotImplementedError("Interface class must implement set_movemend_speed")
+
+    def rapid_move(self, x=None, y=None, z=None) -> str:
+        """
+        Moves the tool in rapid motion.
+
+        :return: Appropriate command.
+        """
+        raise NotImplementedError("Interface class must implement rapid_move")
 
     def linear_move(self, x=None, y=None, z=None) -> str:
         """
@@ -26,7 +50,7 @@ class Interface:
 
         :return: Appropriate command.
         """
-        raise NotImplementedError("Interface class must implement the linear_move command")
+        raise NotImplementedError("Interface class must implement linear_move")
 
     def laser_off(self) -> str:
         """
@@ -34,7 +58,7 @@ class Interface:
 
         :return: Appropriate command.
         """
-        raise NotImplementedError("Interface class must implement the laser_off command")
+        raise NotImplementedError("Interface class must implement laser_off")
 
     def set_laser_power(self, power) -> str:
         """
@@ -44,7 +68,23 @@ class Interface:
         :param power: Defines the power level of the laser. Valid values range between 0 and 1.
         :return: Appropriate command.
         """
-        raise NotImplementedError("Interface class must implement the laser_power command")
+        raise NotImplementedError("Interface class must implement set_laser_power")
+
+    def set_laser_mode(self, mode) -> str:
+        """
+        Set lasermode to either 'constant' or 'dynamic'.
+
+        :return: ''.
+        """
+        raise NotImplementedError("Interface class must implement set_laser_mode")
+
+    def set_distance_mode(self, distance_mode) -> str:
+        """
+        Set distance mode to either 'absolute' or 'relative' coordinates.
+
+        :return: Appropriate command.
+        """
+        raise NotImplementedError("Interface class must implement set_distance_mode")
 
     def set_absolute_coordinates(self) -> str:
         """
@@ -56,7 +96,7 @@ class Interface:
 
         :return: Appropriate command.
         """
-        raise NotImplementedError("Interface class must implement the set_absolute_coordinates command")
+        raise NotImplementedError("Interface class must implement set_absolute_coordinates")
 
     def set_relative_coordinates(self) -> str:
         """
@@ -68,13 +108,30 @@ class Interface:
 
         :return: Appropriate command.
         """
-        raise NotImplementedError("Interface class must implement the set_relative_coordinates command")
+        raise NotImplementedError("Interface class must implement set_relative_coordinates")
+
+    def set_unit(self, unit):
+        """
+        Specify the unit of measurement.
+
+        :return: Appropriate command.
+        """
+        raise NotImplementedError("Interface class must implement set_unit")
 
     # Optional commands #
+    def program_end(self) -> str:
+        """
+        Optional method, if implemented return 'program end', if not return ''
+
+        :return: Appropriate command.
+        """
+        pass
+
     def dwell(self, milliseconds) -> str:
         """
         Optional method, if implemented dwells for a determined number of milliseconds before moving to the next command.
 
+        :param milliseconds: Defines number of milliseconds before moving on. Floating point value >= 0.
         :return: Appropriate command.
         """
         pass
@@ -86,14 +143,6 @@ class Interface:
         input positions to the new coordinate space.
 
         :return: Appropriate command.
-        """
-        pass
-
-    def set_unit(self, unit):
-        """
-        Optional method, if implemented Specifies the unit of measurement.
-
-        :return: Appropriate command. If not implemented return ''.
         """
         pass
 

@@ -17,6 +17,7 @@ from svg_to_gcode.geometry._circular_arc import CircularArc
 from svg_to_gcode.geometry._elliptical_arc import EllipticalArc
 from svg_to_gcode.geometry._quadratic_bazier import QuadraticBezier
 from svg_to_gcode.geometry._cubic_bazier import CubicBazier
+from svg_to_gcode.geometry._raster_image import RasterImage
 
 from svg_to_gcode.geometry._abstract_chain import Chain
 from svg_to_gcode.geometry._line_segment_chain import LineSegmentChain
