@@ -1,4 +1,5 @@
 from xml.etree import ElementTree
+from svgpathtools import svg2paths
 from typing import List
 from copy import deepcopy
 
@@ -6,6 +7,22 @@ from svg_to_gcode.svg_parser import Path, Transformation
 from svg_to_gcode.geometry import Curve
 
 NAMESPACES = {'svg': 'http://www.w3.org/2000/svg'}
+
+
+def svg_height(file):
+    # print(file)
+    """
+      get height svg file
+    """
+    paths, attributes = svg2paths(file)
+
+    # let's take the first path
+    mypath = paths[0]
+
+    # Find height, width
+    xmin, xmax, ymin, ymax = mypath.bbox()
+    # print("width = ", xmax - xmin)
+    return (ymax - ymin)
 
 
 def _has_style(element: ElementTree.Element, key: str, value: str) -> bool:
@@ -16,7 +33,7 @@ def _has_style(element: ElementTree.Element, key: str, value: str) -> bool:
 
 
 # Todo deal with viewBoxes
-def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=None, draw_hidden=False,
+def parse_root(root: ElementTree.Element, canvas_height, transform_origin=True, draw_hidden=False,
                visible_root=True, root_transformation=None) -> List[Curve]:
 
     """
@@ -32,7 +49,6 @@ def parse_root(root: ElementTree.Element, transform_origin=True, canvas_height=N
     :param root_transformation: Specifies whether the root's transformation. (Transformations are inheritable)
     :return: A list of geometric curves describing the svg. Use the Compiler sub-module to compile them to gcode.
     """
-
     if canvas_height is None:
         height_str = root.get("height")
         canvas_height = float(height_str) if height_str.isnumeric() else float(height_str[:-2])
@@ -103,4 +119,9 @@ def parse_file(file_path: str, transform_origin=True, canvas_height=None, draw_h
             :return: A list of geometric curves describing the svg. Use the Compiler sub-module to compile them to gcode.
         """
     root = ElementTree.parse(file_path).getroot()
+    height_str = root.get("height")
+    if not height_str and not canvas_height:
+        canvas_height = svg_height(file_path)
+    elif not canvas_height:
+        canvas_height = None
     return parse_root(root, transform_origin, canvas_height, draw_hidden)

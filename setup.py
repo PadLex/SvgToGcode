@@ -11,7 +11,7 @@ setuptools.setup(
     description="The definitive NPM module to construct gcode from svg files.",
     long_description=readme,
     long_description_content_type="text/markdown",
-    url="https://github.com/PadLex/SvgToGcode",
+    url="https://github.com/inghvar/SvgToGcode",
     packages=setuptools.find_packages(exclude=("testing", "testing.*")),
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -19,4 +19,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    install_requires=['svgpathtools==1.6.1']
 )
