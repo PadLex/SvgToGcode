@@ -14,7 +14,7 @@ class Compiler:
     """
 
     def __init__(self, interface_class: typing.Type[Interface], movement_speed, cutting_speed, pass_depth,
-                 dwell_time=0, unit=None, custom_header=None, custom_footer=None):
+                 dwell_time=0, unit=None, custom_header=None, custom_footer=None, dwell_before_cut=False):
         """
 
         :param interface_class: Specify which interface to use. The most common is the gcode interface.
@@ -25,12 +25,14 @@ class Compiler:
         :param unit: specify a unit to the machine
         :param custom_header: A list of commands to be executed before all generated commands. Default is [laser_off,]
         :param custom_footer: A list of commands to be executed after all generated commands. Default is [laser_off,]
+        :param dwell_before_cut: Wait dwell time before the cut, not after. Default is False.
         """
         self.interface = interface_class()
         self.movement_speed = movement_speed
         self.cutting_speed = cutting_speed
         self.pass_depth = abs(pass_depth)
         self.dwell_time = dwell_time
+        self.dwell_before_cut = dwell_before_cut
 
         if (unit is not None) and (unit not in UNITS):
             raise ValueError(f"Unknown unit {unit}. Please specify one of the following: {UNITS}")
@@ -117,6 +119,9 @@ class Compiler:
                     self.interface.set_laser_power(1)]
 
             if self.dwell_time > 0:
+                if self.dwell_before_cut:
+                    code = code + [self.interface.dwell(self.dwell_time)]
+                else:
                 code = [self.interface.dwell(self.dwell_time)] + code
 
         for line in line_chain:
